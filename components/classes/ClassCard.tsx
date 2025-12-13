@@ -9,9 +9,10 @@ interface ClassCardProps {
   item: ClassItem;
   onView: (item: ClassItem) => void;
   onTakeAttendance: (item: ClassItem) => void;
+  onCreateAssignment?: (item: ClassItem) => void;
 }
 
-export function ClassCard({ item, onView, onTakeAttendance }: ClassCardProps) {
+export function ClassCard({ item, onView, onTakeAttendance, onCreateAssignment }: ClassCardProps) {
   const { colors } = useTheme();
 
   return (
@@ -65,6 +66,19 @@ export function ClassCard({ item, onView, onTakeAttendance }: ClassCardProps) {
           <Text style={[styles.attendanceButtonText, { color: colors.primary.contrast }]}>Attendance</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Quick Assignment Button */}
+      {onCreateAssignment && (
+        <TouchableOpacity
+          style={[styles.quickAssignmentButton, { backgroundColor: colors.status.warning.background, borderTopColor: colors.ui.divider }]}
+          onPress={() => onCreateAssignment(item)}
+          activeOpacity={0.7}
+        >
+          <IconSymbol name="doc.text.fill" size={16} color={colors.status.warning.main} />
+          <Text style={[styles.quickAssignmentText, { color: colors.status.warning.main }]}>Create Assignment</Text>
+          <IconSymbol name="chevron.right" size={14} color={colors.status.warning.main} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -144,5 +158,18 @@ const styles = StyleSheet.create({
   attendanceButtonText: {
     fontSize: FontSizes.sm,
     fontWeight: '600',
+  },
+  quickAssignmentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.sm,
+    borderTopWidth: 1,
+    gap: Spacing.xs,
+  },
+  quickAssignmentText: {
+    fontSize: FontSizes.sm,
+    fontWeight: '600',
+    flex: 1,
   },
 });

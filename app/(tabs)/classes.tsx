@@ -9,6 +9,7 @@
  * - Optimized code
  */
 
+import { AssignmentFormModal } from '@/components/classes/AssignmentFormModal';
 import { AttendanceModal } from '@/components/classes/AttendanceModal';
 import { ClassCard } from '@/components/classes/ClassCard';
 import { ClassDetailsModal } from '@/components/classes/ClassDetailsModal';
@@ -37,6 +38,7 @@ export default function ClassesScreen() {
   const [showGradeFilter, setShowGradeFilter] = useState(false);
   const [showClassDetails, setShowClassDetails] = useState(false);
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
 
   const [students, setStudents] = useState<Student[]>([]);
@@ -246,6 +248,11 @@ export default function ClassesScreen() {
     }
   };
 
+  const handleCreateAssignment = (classItem: ClassItem) => {
+    setSelectedClass(classItem);
+    setShowAssignmentForm(true);
+  };
+
 
 
   return (
@@ -305,6 +312,7 @@ export default function ClassesScreen() {
             item={item}
             onView={handleViewClass}
             onTakeAttendance={handleTakeAttendance}
+            onCreateAssignment={handleCreateAssignment}
           />
         )}
         keyExtractor={(item) => item.id}
@@ -353,6 +361,40 @@ export default function ClassesScreen() {
         onMarkAttendance={markAttendance}
         onSubmit={submitAttendance}
       />
+
+      <AssignmentFormModal
+        visible={showAssignmentForm}
+        onClose={() => setShowAssignmentForm(false)}
+        selectedClass={selectedClass}
+      />
+
+      {/* Floating Action Button for Create Assignment */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.primary.main }]}
+        onPress={() => {
+          if (!selectedClass && filteredClasses.length > 0) {
+            // If no class is selected, show a picker
+            Alert.alert(
+              '📚 Select Class',
+              'Choose a class to create assignment for:',
+              filteredClasses.map(cls => ({
+                text: cls.className,
+                onPress: () => {
+                  setSelectedClass(cls);
+                  setShowAssignmentForm(true);
+                }
+              })).concat([{ text: 'Cancel', style: 'cancel' }])
+            );
+          } else if (selectedClass) {
+            setShowAssignmentForm(true);
+          } else {
+            Alert.alert('No Classes', 'Please add classes first');
+          }
+        }}
+        activeOpacity={0.8}
+      >
+        <IconSymbol name="plus" size={28} color={colors.primary.contrast} />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -445,5 +487,24 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
 
+  // Floating Action Button
+  fab: {
+    position: 'absolute',
+    bottom: Spacing['2xl'],
+    right: Spacing.lg,
+    width: 64,
+    height: 64,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
 
 });

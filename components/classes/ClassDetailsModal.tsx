@@ -1,9 +1,10 @@
 import { BorderRadius, FontSizes, Spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { ClassItem } from '@/types/classes';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { IconSymbol } from '../ui/icon-symbol';
+import { AssignmentFormModal } from './AssignmentFormModal';
 
 interface ClassDetailsModalProps {
   visible: boolean;
@@ -20,6 +21,7 @@ export function ClassDetailsModal({
 }: ClassDetailsModalProps) {
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -205,7 +207,8 @@ export function ClassDetailsModal({
               <TouchableOpacity
                 style={[styles.detailsActionButton, { backgroundColor: colors.background.secondary }]}
                 onPress={() => {
-                  Alert.alert('Create Assignment', `Creating new assignment for ${selectedClass.className}`);
+                  onClose();
+                  setTimeout(() => setShowAssignmentForm(true), 300);
                 }}
                 activeOpacity={0.7}
               >
@@ -231,6 +234,13 @@ export function ClassDetailsModal({
           </TouchableOpacity>
         </Animated.View>
       </View>
+
+      {/* Assignment Form Modal */}
+      <AssignmentFormModal
+        visible={showAssignmentForm}
+        onClose={() => setShowAssignmentForm(false)}
+        selectedClass={selectedClass}
+      />
     </Modal>
   );
 }
