@@ -21,9 +21,9 @@ import type {
  * Primary Colors - Used for main buttons, headers, and key UI elements
  */
 const PRIMARY = {
-  main: '#4A90E2',        // Professional blue
-  light: '#6BA3E8',       // Lighter shade for hover/pressed states
-  dark: '#3A7BC8',        // Darker shade for depth
+  main: '#288511ff',        // 4A90E2 Professional blue
+  light: '#60da66ff',       // 6BA3E8 Lighter shade for hover/pressed states
+  dark: '#253806ff',        //3A7BC8 Darker shade for depth
   contrast: '#FFFFFF',    // Text color on primary background
 };
 
