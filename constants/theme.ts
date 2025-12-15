@@ -11,19 +11,19 @@
 
 import { Platform } from 'react-native';
 import type {
-    AppColorsType,
-    BorderRadiusType,
-    FontSizesType,
-    SpacingType
+  AppColorsType,
+  BorderRadiusType,
+  FontSizesType,
+  SpacingType
 } from './theme.types';
 
 /**
  * Primary Colors - Used for main buttons, headers, and key UI elements
  */
 const PRIMARY = {
-  main: '#4A90E2',        // Professional blue
-  light: '#6BA3E8',       // Lighter shade for hover/pressed states
-  dark: '#3A7BC8',        // Darker shade for depth
+  main: '#4A90E2',        // 4A90E2 Professional blue
+  light: '#6BA3E8',       // 6BA3E8 Lighter shade for hover/pressed states
+  dark: '#3A7BC8',        //3A7BC8 Darker shade for depth
   contrast: '#FFFFFF',    // Text color on primary background
 };
 
@@ -100,28 +100,71 @@ const STATUS = {
  */
 const DARK = {
   primary: {
-    main: '#5BA3F5',
+    main: '#5BA3F5',      // Brighter blue for dark mode
     light: '#7BB8F7',
     dark: '#4A90E2',
-    contrast: '#000000',
+    contrast: '#FFFFFF',  // White text on primary in dark mode
   },
   secondary: {
-    main: '#9B88FF',
+    main: '#9B88FF',      // Brighter purple for dark mode
     light: '#B5A3FF',
     dark: '#7B68EE',
-    contrast: '#000000',
+    contrast: '#FFFFFF',
   },
   background: {
-    primary: '#0F1419',   // Dark background
+    primary: '#1a2025ff',   // Very dark background
     secondary: '#1A1F2E', // Slightly lighter for cards
-    tertiary: '#2D3748',  // Borders/dividers
+    tertiary: '#252D3D',  // Even lighter for elevated elements
   },
   text: {
-    primary: '#F9FAFB',
-    secondary: '#D1D5DB',
-    tertiary: '#9CA3AF',
-    disabled: '#6B7280',
-    inverse: '#1A1A1A',
+    primary: '#F9FAFB',   // Almost white
+    secondary: '#D1D5DB', // Light grey
+    tertiary: '#9CA3AF',  // Medium grey
+    disabled: '#6B7280',  // Darker grey
+    inverse: '#1A1A1A',   // Dark text for light backgrounds
+  },
+  ui: {
+    border: '#2D3748',
+    divider: '#374151',
+    shadow: '#00000080',
+    overlay: '#000000CC',
+    card: '#1A1F2E',
+    input: {
+      background: '#252D3D',
+      border: '#374151',
+      focus: '#5BA3F5',
+      error: '#F87171',
+    },
+  },
+  status: {
+    success: {
+      main: '#34D399',
+      light: '#6EE7B7',
+      dark: '#10B981',
+      background: '#064E3B',
+      text: '#A7F3D0',
+    },
+    error: {
+      main: '#F87171',
+      light: '#FCA5A5',
+      dark: '#EF4444',
+      background: '#7F1D1D',
+      text: '#FECACA',
+    },
+    warning: {
+      main: '#FBBF24',
+      light: '#FCD34D',
+      dark: '#F59E0B',
+      background: '#78350F',
+      text: '#FDE68A',
+    },
+    info: {
+      main: '#60A5FA',
+      light: '#93C5FD',
+      dark: '#3B82F6',
+      background: '#1E3A8A',
+      text: '#BFDBFE',
+    },
   },
 };
 

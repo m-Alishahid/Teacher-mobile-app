@@ -1,11 +1,5 @@
-/**
- * Login Screen - Entry point of the app
- * 
- * This is the first screen users see.
- * After successful login, navigate to (tabs)
- */
-
-import { AppColors, BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
@@ -23,6 +17,7 @@ import {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -54,32 +49,36 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <StatusBar style="dark" />
+      <StatusBar style={isDark ? "light" : "dark"} />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         {/* Header Section */}
         <View style={styles.headerSection}>
-          <View style={styles.logoContainer}>
+          <View style={[styles.logoContainer, { backgroundColor: colors.primary.main, shadowColor: colors.primary.main }]}>
             <Text style={styles.logoEmoji}>📚</Text>
           </View>
-          <Text style={styles.title}>Teacher Portal</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+          <Text style={[styles.title, { color: colors.text.primary }]}>Teacher Portal</Text>
+          <Text style={[styles.subtitle, { color: colors.text.secondary }]}>Sign in to continue</Text>
         </View>
 
         {/* Form Section */}
         <View style={styles.formSection}>
           {/* Email Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>Email</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: colors.ui.input.background, 
+                borderColor: colors.ui.input.border,
+                color: colors.text.primary 
+              }]}
               placeholder="Enter your email"
-              placeholderTextColor={AppColors.text.tertiary}
+              placeholderTextColor={colors.text.tertiary}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -90,11 +89,15 @@ export default function LoginScreen() {
 
           {/* Password Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>Password</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { 
+                backgroundColor: colors.ui.input.background, 
+                borderColor: colors.ui.input.border,
+                color: colors.text.primary 
+              }]}
               placeholder="Enter your password"
-              placeholderTextColor={AppColors.text.tertiary}
+              placeholderTextColor={colors.text.tertiary}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -104,44 +107,51 @@ export default function LoginScreen() {
 
           {/* Forgot Password */}
           <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <Text style={[styles.forgotPasswordText, { color: colors.primary.main }]}>Forgot Password?</Text>
           </TouchableOpacity>
 
           {/* Login Button */}
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
+            style={[
+                styles.loginButton, 
+                { backgroundColor: colors.primary.main, shadowColor: colors.primary.main }, 
+                isLoading && styles.loginButtonDisabled
+            ]}
             onPress={handleLogin}
             disabled={isLoading}
             activeOpacity={0.8}
           >
-            <Text style={styles.loginButtonText}>
+            <Text style={[styles.loginButtonText, { color: colors.primary.contrast }]}>
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Text>
           </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.ui.divider }]} />
+            <Text style={[styles.dividerText, { color: colors.text.tertiary }]}>OR</Text>
+            <View style={[styles.divider, { backgroundColor: colors.ui.divider }]} />
           </View>
 
           {/* Biometric Login Button */}
           <TouchableOpacity
-            style={styles.biometricButton}
+            style={[
+                styles.biometricButton, 
+                { backgroundColor: colors.background.secondary, borderColor: colors.ui.border }
+            ]}
             onPress={handleBiometricLogin}
             activeOpacity={0.8}
           >
             <Text style={styles.biometricIcon}>🔐</Text>
-            <Text style={styles.biometricButtonText}>Login with Biometrics</Text>
+            <Text style={[styles.biometricButtonText, { color: colors.text.primary }]}>Login with Biometrics</Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          <Text style={[styles.footerText, { color: colors.text.secondary }]}>
             Don't have an account?{' '}
-            <Text style={styles.signUpText}>Contact Admin</Text>
+            <Text style={[styles.signUpText, { color: colors.primary.main }]}>Contact Admin</Text>
           </Text>
         </View>
       </ScrollView>
@@ -152,7 +162,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background.primary,
   },
   scrollContent: {
     flexGrow: 1,
@@ -167,12 +176,10 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.primary.main,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.lg,
     // Shadow for iOS
-    shadowColor: AppColors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -185,12 +192,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSizes['3xl'],
     fontWeight: 'bold',
-    color: AppColors.text.primary,
     marginBottom: Spacing.xs,
   },
   subtitle: {
     fontSize: FontSizes.base,
-    color: AppColors.text.secondary,
   },
   formSection: {
     marginBottom: Spacing.xl,
@@ -201,18 +206,14 @@ const styles = StyleSheet.create({
   label: {
     fontSize: FontSizes.sm,
     fontWeight: '600',
-    color: AppColors.text.primary,
     marginBottom: Spacing.xs,
   },
   input: {
-    backgroundColor: AppColors.ui.input.background,
     borderWidth: 1,
-    borderColor: AppColors.ui.input.border,
     borderRadius: BorderRadius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     fontSize: FontSizes.base,
-    color: AppColors.text.primary,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
@@ -220,18 +221,15 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: FontSizes.sm,
-    color: AppColors.primary.main,
     fontWeight: '600',
   },
   loginButton: {
-    backgroundColor: AppColors.primary.main,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
     // Shadow
-    shadowColor: AppColors.primary.main,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -241,7 +239,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   loginButtonText: {
-    color: AppColors.primary.contrast,
     fontSize: FontSizes.base,
     fontWeight: '600',
   },
@@ -253,23 +250,19 @@ const styles = StyleSheet.create({
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: AppColors.ui.divider,
   },
   dividerText: {
     marginHorizontal: Spacing.md,
     fontSize: FontSizes.sm,
-    color: AppColors.text.tertiary,
     fontWeight: '500',
   },
   biometricButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.background.secondary,
     paddingVertical: Spacing.md,
     borderRadius: BorderRadius.md,
     borderWidth: 1,
-    borderColor: AppColors.ui.border,
     minHeight: 52,
   },
   biometricIcon: {
@@ -277,7 +270,6 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
   },
   biometricButtonText: {
-    color: AppColors.text.primary,
     fontSize: FontSizes.base,
     fontWeight: '600',
   },
@@ -288,10 +280,8 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: FontSizes.sm,
-    color: AppColors.text.secondary,
   },
   signUpText: {
-    color: AppColors.primary.main,
     fontWeight: '600',
   },
 });

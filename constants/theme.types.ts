@@ -60,6 +60,8 @@ export interface DarkModeColors {
   secondary: ColorShade;
   background: BackgroundColors;
   text: TextColors;
+  ui: UIColors;
+  status: StatusColors;
 }
 
 export interface AppColorsType {

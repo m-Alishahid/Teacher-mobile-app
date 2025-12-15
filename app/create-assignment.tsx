@@ -13,6 +13,7 @@
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { AppColors, BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -28,6 +29,7 @@ import {
 } from 'react-native';
 
 export default function CreateAssignmentScreen() {
+  const { colors, isDark } = useTheme();
   const [title, setTitle] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
@@ -172,19 +174,22 @@ export default function CreateAssignmentScreen() {
       onRequestClose={onClose}
     >
       <TouchableOpacity
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, { backgroundColor: colors.ui.overlay }]}
         activeOpacity={1}
         onPress={onClose}
       >
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>{title}</Text>
+        <View style={[styles.modalContent, { backgroundColor: colors.ui.card }]}>
+          <Text style={[styles.modalTitle, { color: colors.text.primary }]}>{title}</Text>
           <ScrollView style={styles.modalScroll}>
             {options.map((option) => (
               <TouchableOpacity
                 key={option}
                 style={[
                   styles.modalOption,
-                  selectedValue === option && styles.modalOptionSelected,
+                  selectedValue === option && [
+                    styles.modalOptionSelected,
+                    { backgroundColor: isDark ? colors.background.tertiary : colors.background.secondary }
+                  ],
                 ]}
                 onPress={() => {
                   onSelect(option);
@@ -194,13 +199,17 @@ export default function CreateAssignmentScreen() {
                 <Text
                   style={[
                     styles.modalOptionText,
-                    selectedValue === option && styles.modalOptionTextSelected,
+                    { color: colors.text.primary },
+                    selectedValue === option && [
+                      styles.modalOptionTextSelected,
+                      { color: colors.primary.main }
+                    ],
                   ]}
                 >
                   {option}
                 </Text>
                 {selectedValue === option && (
-                  <IconSymbol name="checkmark" size={20} color={AppColors.primary.main} />
+                  <IconSymbol name="checkmark" size={20} color={colors.primary.main} />
                 )}
               </TouchableOpacity>
             ))}
@@ -225,19 +234,22 @@ export default function CreateAssignmentScreen() {
         onRequestClose={() => setShowDatePicker(false)}
       >
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, { backgroundColor: colors.ui.overlay }]}
           activeOpacity={1}
           onPress={() => setShowDatePicker(false)}
         >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Due Date</Text>
+          <View style={[styles.modalContent, { backgroundColor: colors.ui.card }]}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>Select Due Date</Text>
             <ScrollView style={styles.modalScroll}>
               {dates.map((date, index) => (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.modalOption,
-                    date.toDateString() === dueDate.toDateString() && styles.modalOptionSelected,
+                    date.toDateString() === dueDate.toDateString() && [
+                      styles.modalOptionSelected,
+                      { backgroundColor: isDark ? colors.background.tertiary : colors.background.secondary }
+                    ],
                   ]}
                   onPress={() => {
                     setDueDate(date);
@@ -247,13 +259,17 @@ export default function CreateAssignmentScreen() {
                   <Text
                     style={[
                       styles.modalOptionText,
-                      date.toDateString() === dueDate.toDateString() && styles.modalOptionTextSelected,
+                      { color: colors.text.primary },
+                      date.toDateString() === dueDate.toDateString() && [
+                        styles.modalOptionTextSelected,
+                        { color: colors.primary.main }
+                      ],
                     ]}
                   >
                     {formatDate(date)}
                   </Text>
                   {date.toDateString() === dueDate.toDateString() && (
-                    <IconSymbol name="checkmark" size={20} color={AppColors.primary.main} />
+                    <IconSymbol name="checkmark" size={20} color={colors.primary.main} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -266,7 +282,7 @@ export default function CreateAssignmentScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
@@ -276,23 +292,23 @@ export default function CreateAssignmentScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View style={styles.header}>
-          <IconSymbol name="doc.text.fill" size={32} color={AppColors.primary.main} />
-          <Text style={styles.headerTitle}>Create New Assignment</Text>
-          <Text style={styles.headerSubtitle}>Fill in the details below</Text>
+        <View style={[styles.header, { backgroundColor: colors.background.secondary, borderBottomColor: colors.ui.border }]}>
+          <IconSymbol name="doc.text.fill" size={32} color={colors.primary.main} />
+          <Text style={[styles.headerTitle, { color: colors.text.primary }]}>Create New Assignment</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.text.secondary }]}>Fill in the details below</Text>
         </View>
 
         {/* Form */}
         <View style={styles.form}>
           {/* Assignment Title */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Assignment Title <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
+              Assignment Title <Text style={[styles.required, { color: colors.status.error.main }]}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.ui.input.background, borderColor: colors.ui.input.border, color: colors.text.primary }]}
               placeholder="Enter assignment title"
-              placeholderTextColor={AppColors.text.tertiary}
+              placeholderTextColor={colors.text.tertiary}
               value={title}
               onChangeText={setTitle}
             />
@@ -300,65 +316,65 @@ export default function CreateAssignmentScreen() {
 
           {/* Subject Selection */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Subject <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
+              Subject <Text style={[styles.required, { color: colors.status.error.main }]}>*</Text>
             </Text>
             <TouchableOpacity
-              style={styles.pickerButton}
+              style={[styles.pickerButton, { backgroundColor: colors.ui.input.background, borderColor: colors.ui.input.border }]}
               onPress={() => setShowSubjectPicker(true)}
             >
               <Text
                 style={[
                   styles.pickerButtonText,
-                  !selectedSubject && styles.pickerButtonTextPlaceholder,
+                  { color: selectedSubject ? colors.text.primary : colors.text.tertiary }
                 ]}
               >
                 {selectedSubject || 'Select subject'}
               </Text>
-              <IconSymbol name="chevron.down" size={16} color={AppColors.text.secondary} />
+              <IconSymbol name="chevron.down" size={16} color={colors.text.secondary} />
             </TouchableOpacity>
           </View>
 
           {/* Due Date & Time */}
           <View style={styles.rowGroup}>
             <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.label}>
-                Due Date <Text style={styles.required}>*</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>
+                Due Date <Text style={[styles.required, { color: colors.status.error.main }]}>*</Text>
               </Text>
               <TouchableOpacity
-                style={styles.pickerButton}
+                style={[styles.pickerButton, { backgroundColor: colors.ui.input.background, borderColor: colors.ui.input.border }]}
                 onPress={() => setShowDatePicker(true)}
               >
-                <IconSymbol name="calendar" size={16} color={AppColors.primary.main} />
-                <Text style={styles.pickerButtonText}>
+                <IconSymbol name="calendar" size={16} color={colors.primary.main} />
+                <Text style={[styles.pickerButtonText, { color: colors.text.primary }]}>
                   {formatDate(dueDate).split(',')[0]}
                 </Text>
               </TouchableOpacity>
             </View>
 
             <View style={[styles.inputGroup, styles.halfWidth]}>
-              <Text style={styles.label}>
-                Time <Text style={styles.required}>*</Text>
+              <Text style={[styles.label, { color: colors.text.primary }]}>
+                Time <Text style={[styles.required, { color: colors.status.error.main }]}>*</Text>
               </Text>
               <TouchableOpacity
-                style={styles.pickerButton}
+                style={[styles.pickerButton, { backgroundColor: colors.ui.input.background, borderColor: colors.ui.input.border }]}
                 onPress={() => setShowTimePicker(true)}
               >
-                <IconSymbol name="clock" size={16} color={AppColors.primary.main} />
-                <Text style={styles.pickerButtonText}>{dueTime}</Text>
+                <IconSymbol name="clock" size={16} color={colors.primary.main} />
+                <Text style={[styles.pickerButtonText, { color: colors.text.primary }]}>{dueTime}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {/* Total Marks */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Total Marks <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
+              Total Marks <Text style={[styles.required, { color: colors.status.error.main }]}>*</Text>
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.ui.input.background, borderColor: colors.ui.input.border, color: colors.text.primary }]}
               placeholder="Enter total marks (e.g., 100)"
-              placeholderTextColor={AppColors.text.tertiary}
+              placeholderTextColor={colors.text.tertiary}
               value={totalMarks}
               onChangeText={setTotalMarks}
               keyboardType="numeric"
@@ -367,13 +383,13 @@ export default function CreateAssignmentScreen() {
 
           {/* Description */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Description <Text style={styles.required}>*</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>
+              Description <Text style={[styles.required, { color: colors.status.error.main }]}>*</Text>
             </Text>
             <TextInput
-              style={[styles.input, styles.textArea]}
+              style={[styles.input, styles.textArea, { backgroundColor: colors.ui.input.background, borderColor: colors.ui.input.border, color: colors.text.primary }]}
               placeholder="Enter assignment description and instructions"
-              placeholderTextColor={AppColors.text.tertiary}
+              placeholderTextColor={colors.text.tertiary}
               value={description}
               onChangeText={setDescription}
               multiline
@@ -384,34 +400,34 @@ export default function CreateAssignmentScreen() {
 
           {/* Attachments */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Attachments</Text>
+            <Text style={[styles.label, { color: colors.text.primary }]}>Attachments</Text>
             
             {/* Upload Button */}
             <TouchableOpacity
-              style={styles.uploadButton}
+              style={[styles.uploadButton, { backgroundColor: isDark ? colors.background.tertiary : colors.background.secondary, borderColor: colors.primary.main }]}
               onPress={handleUploadFile}
               activeOpacity={0.7}
             >
-              <IconSymbol name="paperclip" size={20} color={AppColors.primary.main} />
-              <Text style={styles.uploadButtonText}>Upload File/Image</Text>
+              <IconSymbol name="paperclip" size={20} color={colors.primary.main} />
+              <Text style={[styles.uploadButtonText, { color: colors.primary.main }]}>Upload File/Image</Text>
             </TouchableOpacity>
 
             {/* Attachment List */}
             {attachments.length > 0 && (
               <View style={styles.attachmentList}>
                 {attachments.map((attachment, index) => (
-                  <View key={index} style={styles.attachmentItem}>
+                  <View key={index} style={[styles.attachmentItem, { backgroundColor: isDark ? colors.background.tertiary : colors.background.secondary, borderColor: colors.ui.border }]}>
                     <IconSymbol
                       name={attachment.endsWith('.pdf') ? 'doc.fill' : 'photo.fill'}
                       size={20}
-                      color={AppColors.primary.main}
+                      color={colors.primary.main}
                     />
-                    <Text style={styles.attachmentName}>{attachment}</Text>
+                    <Text style={[styles.attachmentName, { color: colors.text.primary }]}>{attachment}</Text>
                     <TouchableOpacity
                       onPress={() => removeAttachment(index)}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                      <IconSymbol name="xmark.circle.fill" size={20} color={AppColors.status.error.main} />
+                      <IconSymbol name="xmark.circle.fill" size={20} color={colors.status.error.main} />
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -422,14 +438,14 @@ export default function CreateAssignmentScreen() {
       </ScrollView>
 
       {/* Submit Button */}
-      <View style={styles.submitContainer}>
+      <View style={[styles.submitContainer, { backgroundColor: colors.background.primary, borderTopColor: colors.ui.border }]}>
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[styles.submitButton, { backgroundColor: colors.primary.main }]}
           onPress={handleSubmit}
           activeOpacity={0.8}
         >
-          <IconSymbol name="checkmark.circle.fill" size={22} color={AppColors.primary.contrast} />
-          <Text style={styles.submitButtonText}>Assign to Class</Text>
+          <IconSymbol name="checkmark.circle.fill" size={22} color={colors.primary.contrast} />
+          <Text style={[styles.submitButtonText, { color: colors.primary.contrast }]}>Assign to Class</Text>
         </TouchableOpacity>
       </View>
 

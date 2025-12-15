@@ -11,6 +11,7 @@
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { AppColors, BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -18,7 +19,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 
 type TabType = 'overview' | 'performance' | 'communication';
@@ -37,6 +38,7 @@ interface TestScore {
 }
 
 export default function StudentDetailsScreen() {
+  const { colors, isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
   // Mock student data - replace with real data from navigation params or API
@@ -138,61 +140,61 @@ export default function StudentDetailsScreen() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Attendance Summary */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Attendance Summary</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Attendance Summary</Text>
         
         {/* Stats Cards */}
         <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: AppColors.status.success.background }]}>
-            <Text style={[styles.statNumber, { color: AppColors.status.success.main }]}>
+          <View style={[styles.statCard, { backgroundColor: colors.status.success.background }]}>
+            <Text style={[styles.statNumber, { color: colors.status.success.main }]}>
               {stats.percentage}%
             </Text>
-            <Text style={[styles.statLabel, { color: AppColors.status.success.text }]}>
+            <Text style={[styles.statLabel, { color: colors.status.success.text }]}>
               Attendance Rate
             </Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: AppColors.primary.main + '15' }]}>
-            <Text style={[styles.statNumber, { color: AppColors.primary.main }]}>
+          <View style={[styles.statCard, { backgroundColor: colors.primary.main + '15' }]}>
+            <Text style={[styles.statNumber, { color: colors.primary.main }]}>
               {stats.total}
             </Text>
-            <Text style={[styles.statLabel, { color: AppColors.text.secondary }]}>
+            <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
               Total Days
             </Text>
           </View>
         </View>
 
         {/* Detailed Stats */}
-        <View style={styles.detailStatsContainer}>
+        <View style={[styles.detailStatsContainer, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
           <View style={styles.detailStatRow}>
             <View style={styles.detailStatLeft}>
-              <View style={[styles.statusDot, { backgroundColor: AppColors.status.success.main }]} />
-              <Text style={styles.detailStatLabel}>Present</Text>
+              <View style={[styles.statusDot, { backgroundColor: colors.status.success.main }]} />
+              <Text style={[styles.detailStatLabel, { color: colors.text.primary }]}>Present</Text>
             </View>
-            <Text style={styles.detailStatValue}>{stats.present} days</Text>
+            <Text style={[styles.detailStatValue, { color: colors.text.secondary }]}>{stats.present} days</Text>
           </View>
           <View style={styles.detailStatRow}>
             <View style={styles.detailStatLeft}>
-              <View style={[styles.statusDot, { backgroundColor: AppColors.status.warning.main }]} />
-              <Text style={styles.detailStatLabel}>Late</Text>
+              <View style={[styles.statusDot, { backgroundColor: colors.status.warning.main }]} />
+              <Text style={[styles.detailStatLabel, { color: colors.text.primary }]}>Late</Text>
             </View>
-            <Text style={styles.detailStatValue}>{stats.late} days</Text>
+            <Text style={[styles.detailStatValue, { color: colors.text.secondary }]}>{stats.late} days</Text>
           </View>
           <View style={styles.detailStatRow}>
             <View style={styles.detailStatLeft}>
-              <View style={[styles.statusDot, { backgroundColor: AppColors.status.error.main }]} />
-              <Text style={styles.detailStatLabel}>Absent</Text>
+              <View style={[styles.statusDot, { backgroundColor: colors.status.error.main }]} />
+              <Text style={[styles.detailStatLabel, { color: colors.text.primary }]}>Absent</Text>
             </View>
-            <Text style={styles.detailStatValue}>{stats.absent} days</Text>
+            <Text style={[styles.detailStatValue, { color: colors.text.secondary }]}>{stats.absent} days</Text>
           </View>
         </View>
       </View>
 
       {/* Recent Attendance History */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Attendance</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Recent Attendance</Text>
         <View style={styles.attendanceList}>
           {attendanceHistory.slice(0, 7).map((record, index) => (
-            <View key={index} style={styles.attendanceItem}>
-              <Text style={styles.attendanceDate}>
+            <View key={index} style={[styles.attendanceItem, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
+              <Text style={[styles.attendanceDate, { color: colors.text.primary }]}>
                 {new Date(record.date).toLocaleDateString('en-US', { 
                   weekday: 'short', 
                   month: 'short', 
@@ -202,17 +204,17 @@ export default function StudentDetailsScreen() {
               <View style={[
                 styles.attendanceStatus,
                 { backgroundColor: 
-                  record.status === 'present' ? AppColors.status.success.background :
-                  record.status === 'late' ? AppColors.status.warning.background :
-                  AppColors.status.error.background
+                  record.status === 'present' ? colors.status.success.background :
+                  record.status === 'late' ? colors.status.warning.background :
+                  colors.status.error.background
                 }
               ]}>
                 <Text style={[
                   styles.attendanceStatusText,
                   { color: 
-                    record.status === 'present' ? AppColors.status.success.text :
-                    record.status === 'late' ? AppColors.status.warning.text :
-                    AppColors.status.error.text
+                    record.status === 'present' ? colors.status.success.text :
+                    record.status === 'late' ? colors.status.warning.text :
+                    colors.status.error.text
                   }
                 ]}>
                   {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
@@ -230,41 +232,41 @@ export default function StudentDetailsScreen() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Overall Performance */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Overall Performance</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Overall Performance</Text>
         
-        <View style={styles.performanceCard}>
+        <View style={[styles.performanceCard, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
           <View style={styles.performanceHeader}>
-            <IconSymbol name="chart.bar.fill" size={32} color={AppColors.primary.main} />
+            <IconSymbol name="chart.bar.fill" size={32} color={colors.primary.main} />
             <View style={styles.performanceHeaderText}>
-              <Text style={styles.performanceTitle}>Average Score</Text>
-              <Text style={styles.performanceSubtitle}>Across all subjects</Text>
+              <Text style={[styles.performanceTitle, { color: colors.text.primary }]}>Average Score</Text>
+              <Text style={[styles.performanceSubtitle, { color: colors.text.secondary }]}>Across all subjects</Text>
             </View>
           </View>
-          <Text style={styles.performanceScore}>{averageScore}%</Text>
-          <View style={styles.performanceBar}>
-            <View style={[styles.performanceBarFill, { width: `${averageScore}%` }]} />
+          <Text style={[styles.performanceScore, { color: colors.primary.main }]}>{averageScore}%</Text>
+          <View style={[styles.performanceBar, { backgroundColor: colors.background.secondary }]}>
+            <View style={[styles.performanceBarFill, { width: `${averageScore}%`, backgroundColor: colors.primary.main }]} />
           </View>
         </View>
       </View>
 
       {/* Recent Test Scores */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Test Scores</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Recent Test Scores</Text>
         <View style={styles.scoresList}>
           {testScores.map((test, index) => {
             const percentage = Math.round((test.score / test.maxScore) * 100);
             const gradeColor = 
-              percentage >= 90 ? AppColors.status.success.main :
-              percentage >= 75 ? AppColors.status.info.main :
-              percentage >= 60 ? AppColors.status.warning.main :
-              AppColors.status.error.main;
+              percentage >= 90 ? colors.status.success.main :
+              percentage >= 75 ? colors.status.info.main :
+              percentage >= 60 ? colors.status.warning.main :
+              colors.status.error.main;
 
             return (
-              <View key={index} style={styles.scoreCard}>
+              <View key={index} style={[styles.scoreCard, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
                 <View style={styles.scoreHeader}>
                   <View style={styles.scoreHeaderLeft}>
-                    <Text style={styles.scoreSubject}>{test.subject}</Text>
-                    <Text style={styles.scoreTest}>{test.test}</Text>
+                    <Text style={[styles.scoreSubject, { color: colors.text.primary }]}>{test.subject}</Text>
+                    <Text style={[styles.scoreTest, { color: colors.text.secondary }]}>{test.test}</Text>
                   </View>
                   <View style={[styles.scorePercentage, { backgroundColor: gradeColor + '20' }]}>
                     <Text style={[styles.scorePercentageText, { color: gradeColor }]}>
@@ -273,10 +275,10 @@ export default function StudentDetailsScreen() {
                   </View>
                 </View>
                 <View style={styles.scoreDetails}>
-                  <Text style={styles.scoreValue}>
+                  <Text style={[styles.scoreValue, { color: colors.text.primary }]}>
                     {test.score} / {test.maxScore}
                   </Text>
-                  <Text style={styles.scoreDate}>
+                  <Text style={[styles.scoreDate, { color: colors.text.tertiary }]}>
                     {new Date(test.date).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric' 
@@ -296,21 +298,21 @@ export default function StudentDetailsScreen() {
     <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
       {/* Parent Information */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Parent Information</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Parent Information</Text>
         
-        <View style={styles.parentCard}>
-          <View style={styles.parentAvatar}>
-            <IconSymbol name="person.fill" size={32} color={AppColors.primary.contrast} />
+        <View style={[styles.parentCard, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
+          <View style={[styles.parentAvatar, { backgroundColor: colors.primary.main }]}>
+            <IconSymbol name="person.fill" size={32} color={colors.primary.contrast} />
           </View>
           <View style={styles.parentInfo}>
-            <Text style={styles.parentName}>{student.parentName}</Text>
+            <Text style={[styles.parentName, { color: colors.text.primary }]}>{student.parentName}</Text>
             <View style={styles.parentDetail}>
-              <IconSymbol name="phone.fill" size={14} color={AppColors.text.secondary} />
-              <Text style={styles.parentDetailText}>{student.parentPhone}</Text>
+              <IconSymbol name="phone.fill" size={14} color={colors.text.secondary} />
+              <Text style={[styles.parentDetailText, { color: colors.text.secondary }]}>{student.parentPhone}</Text>
             </View>
             <View style={styles.parentDetail}>
-              <IconSymbol name="envelope.fill" size={14} color={AppColors.text.secondary} />
-              <Text style={styles.parentDetailText}>{student.parentEmail}</Text>
+              <IconSymbol name="envelope.fill" size={14} color={colors.text.secondary} />
+              <Text style={[styles.parentDetailText, { color: colors.text.secondary }]}>{student.parentEmail}</Text>
             </View>
           </View>
         </View>
@@ -318,21 +320,21 @@ export default function StudentDetailsScreen() {
 
       {/* Communication Actions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Contact Parent</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Contact Parent</Text>
         
         <TouchableOpacity
           style={styles.communicationButton}
           onPress={handleMessageParent}
           activeOpacity={0.7}
         >
-          <View style={[styles.communicationIconContainer, { backgroundColor: AppColors.primary.main }]}>
-            <IconSymbol name="message.fill" size={24} color={AppColors.primary.contrast} />
+          <View style={[styles.communicationIconContainer, { backgroundColor: colors.primary.main }]}>
+            <IconSymbol name="message.fill" size={24} color={colors.primary.contrast} />
           </View>
           <View style={styles.communicationButtonText}>
-            <Text style={styles.communicationButtonTitle}>Message Parent</Text>
-            <Text style={styles.communicationButtonSubtitle}>Send a message via app</Text>
+            <Text style={[styles.communicationButtonTitle, { color: colors.text.primary }]}>Message Parent</Text>
+            <Text style={[styles.communicationButtonSubtitle, { color: colors.text.secondary }]}>Send a message via app</Text>
           </View>
-          <IconSymbol name="chevron.right" size={20} color={AppColors.text.tertiary} />
+          <IconSymbol name="chevron.right" size={20} color={colors.text.tertiary} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -340,14 +342,14 @@ export default function StudentDetailsScreen() {
           onPress={handleCallParent}
           activeOpacity={0.7}
         >
-          <View style={[styles.communicationIconContainer, { backgroundColor: AppColors.status.success.main }]}>
-            <IconSymbol name="phone.fill" size={24} color={AppColors.primary.contrast} />
+          <View style={[styles.communicationIconContainer, { backgroundColor: colors.status.success.main }]}>
+            <IconSymbol name="phone.fill" size={24} color={colors.primary.contrast} />
           </View>
           <View style={styles.communicationButtonText}>
-            <Text style={styles.communicationButtonTitle}>Call Parent</Text>
-            <Text style={styles.communicationButtonSubtitle}>Make a phone call</Text>
+            <Text style={[styles.communicationButtonTitle, { color: colors.text.primary }]}>Call Parent</Text>
+            <Text style={[styles.communicationButtonSubtitle, { color: colors.text.secondary }]}>Make a phone call</Text>
           </View>
-          <IconSymbol name="chevron.right" size={20} color={AppColors.text.tertiary} />
+          <IconSymbol name="chevron.right" size={20} color={colors.text.tertiary} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -355,94 +357,94 @@ export default function StudentDetailsScreen() {
           onPress={() => Alert.alert('Email', 'Email interface will open here')}
           activeOpacity={0.7}
         >
-          <View style={[styles.communicationIconContainer, { backgroundColor: AppColors.status.info.main }]}>
-            <IconSymbol name="envelope.fill" size={24} color={AppColors.primary.contrast} />
+          <View style={[styles.communicationIconContainer, { backgroundColor: colors.status.info.main }]}>
+            <IconSymbol name="envelope.fill" size={24} color={colors.primary.contrast} />
           </View>
           <View style={styles.communicationButtonText}>
-            <Text style={styles.communicationButtonTitle}>Send Email</Text>
-            <Text style={styles.communicationButtonSubtitle}>Send via email</Text>
+            <Text style={[styles.communicationButtonTitle, { color: colors.text.primary }]}>Send Email</Text>
+            <Text style={[styles.communicationButtonSubtitle, { color: colors.text.secondary }]}>Send via email</Text>
           </View>
-          <IconSymbol name="chevron.right" size={20} color={AppColors.text.tertiary} />
+          <IconSymbol name="chevron.right" size={20} color={colors.text.tertiary} />
         </TouchableOpacity>
       </View>
 
       {/* Recent Communication */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Communication</Text>
+        <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>Recent Communication</Text>
         <View style={styles.emptyState}>
-          <IconSymbol name="bubble.left.and.bubble.right" size={48} color={AppColors.text.tertiary} />
-          <Text style={styles.emptyStateText}>No recent messages</Text>
-          <Text style={styles.emptyStateSubtext}>Start a conversation with the parent</Text>
+          <IconSymbol name="bubble.left.and.bubble.right" size={48} color={colors.text.tertiary} />
+          <Text style={[styles.emptyStateText, { color: colors.text.secondary }]}>No recent messages</Text>
+          <Text style={[styles.emptyStateSubtext, { color: colors.text.tertiary }]}>Start a conversation with the parent</Text>
         </View>
       </View>
     </ScrollView>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Profile Header */}
-      <View style={styles.profileHeader}>
-        <View style={styles.profileAvatar}>
-          <Text style={styles.profileAvatarText}>{getInitials(student.name)}</Text>
+      <View style={[styles.profileHeader, { backgroundColor: colors.primary.main }]}>
+        <View style={[styles.profileAvatar, { backgroundColor: colors.primary.contrast, borderColor: 'rgba(255, 255, 255, 0.3)' }]}>
+          <Text style={[styles.profileAvatarText, { color: colors.primary.main }]}>{getInitials(student.name)}</Text>
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{student.name}</Text>
-          <Text style={styles.profileRoll}>Roll No: {student.rollNumber}</Text>
+          <Text style={[styles.profileName, { color: colors.primary.contrast }]}>{student.name}</Text>
+          <Text style={[styles.profileRoll, { color: colors.primary.contrast }]}>Roll No: {student.rollNumber}</Text>
           <View style={styles.profileClass}>
-            <IconSymbol name="graduationcap.fill" size={14} color={AppColors.primary.main} />
-            <Text style={styles.profileClassText}>{student.class}</Text>
+            <IconSymbol name="graduationcap.fill" size={14} color={colors.primary.contrast} />
+            <Text style={[styles.profileClassText, { color: colors.primary.contrast }]}>{student.class}</Text>
           </View>
         </View>
       </View>
 
       {/* Tab Navigation */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: colors.background.secondary, borderBottomColor: colors.ui.border }]}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'overview' && styles.tabActive]}
+          style={[styles.tab, activeTab === 'overview' && { borderBottomColor: colors.primary.main }]}
           onPress={() => setActiveTab('overview')}
         >
           <IconSymbol 
             name="chart.pie.fill" 
             size={20} 
-            color={activeTab === 'overview' ? AppColors.primary.main : AppColors.text.secondary} 
+            color={activeTab === 'overview' ? colors.primary.main : colors.text.secondary} 
           />
           <Text style={[
             styles.tabText,
-            activeTab === 'overview' && styles.tabTextActive
+            { color: activeTab === 'overview' ? colors.primary.main : colors.text.secondary }
           ]}>
             Overview
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'performance' && styles.tabActive]}
+          style={[styles.tab, activeTab === 'performance' && { borderBottomColor: colors.primary.main }]}
           onPress={() => setActiveTab('performance')}
         >
           <IconSymbol 
             name="chart.bar.fill" 
             size={20} 
-            color={activeTab === 'performance' ? AppColors.primary.main : AppColors.text.secondary} 
+            color={activeTab === 'performance' ? colors.primary.main : colors.text.secondary} 
           />
           <Text style={[
             styles.tabText,
-            activeTab === 'performance' && styles.tabTextActive
+            { color: activeTab === 'performance' ? colors.primary.main : colors.text.secondary }
           ]}>
             Performance
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'communication' && styles.tabActive]}
+          style={[styles.tab, activeTab === 'communication' && { borderBottomColor: colors.primary.main }]}
           onPress={() => setActiveTab('communication')}
         >
           <IconSymbol 
             name="message.fill" 
             size={20} 
-            color={activeTab === 'communication' ? AppColors.primary.main : AppColors.text.secondary} 
+            color={activeTab === 'communication' ? colors.primary.main : colors.text.secondary} 
           />
           <Text style={[
             styles.tabText,
-            activeTab === 'communication' && styles.tabTextActive
+            { color: activeTab === 'communication' ? colors.primary.main : colors.text.secondary }
           ]}>
             Communication
           </Text>

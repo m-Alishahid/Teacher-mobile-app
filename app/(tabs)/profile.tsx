@@ -1,27 +1,28 @@
-/**
- * Profile Screen (Settings)
- * 
- * User profile and app settings
- */
-
-import { AppColors, BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Alert,
+    Platform,
     ScrollView,
     StyleSheet,
+    Switch,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 interface SettingItemProps {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle?: string;
-  onPress: () => void;
-  showArrow?: boolean;
+  onPress?: () => void;
+  type?: 'link' | 'toggle' | 'info';
+  value?: boolean;
+  onValueChange?: (val: boolean) => void;
+  color?: string;
 }
 
 const SettingItem: React.FC<SettingItemProps> = ({
@@ -29,36 +30,68 @@ const SettingItem: React.FC<SettingItemProps> = ({
   title,
   subtitle,
   onPress,
-  showArrow = true,
+  type = 'link',
+  value,
+  onValueChange,
+  color,
 }) => {
+  const { colors, isDark } = useTheme();
+
   return (
-    <TouchableOpacity style={styles.settingItem} onPress={onPress} activeOpacity={0.7}>
-      <View style={styles.settingIcon}>
-        <Text style={styles.iconText}>{icon}</Text>
+    <TouchableOpacity
+      style={[
+        styles.settingItem,
+        { 
+          backgroundColor: colors.background.secondary,
+          borderBottomColor: colors.ui.divider 
+        }
+      ]}
+      onPress={type === 'toggle' ? undefined : onPress}
+      activeOpacity={type === 'toggle' ? 1 : 0.7}
+      disabled={type === 'info'}
+    >
+      <View style={[styles.settingIcon, { backgroundColor: isDark ? colors.background.tertiary : colors.ui.divider + '40' }]}> 
+        <Ionicons name={icon} size={22} color={color || colors.primary.main} />
       </View>
+      
       <View style={styles.settingContent}>
-        <Text style={styles.settingTitle}>{title}</Text>
-        {subtitle && <Text style={styles.settingSubtitle}>{subtitle}</Text>}
+        <Text style={[styles.settingTitle, { color: colors.text.primary }]}>{title}</Text>
+        {subtitle && <Text style={[styles.settingSubtitle, { color: colors.text.secondary }]}>{subtitle}</Text>}
       </View>
-      {showArrow && <Text style={styles.arrowIcon}>›</Text>}
+
+      {type === 'link' && (
+        <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
+      )}
+      
+      {type === 'toggle' && (
+        <Switch
+          value={value}
+          onValueChange={onValueChange}
+          trackColor={{ false: colors.text.disabled, true: colors.primary.main }}
+          thumbColor={Platform.OS === 'ios' ? '#fff' : value ? colors.primary.contrast : '#f4f3f4'} 
+        />
+      )}
     </TouchableOpacity>
   );
 };
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { colors, isDark, toggleTheme } = useTheme();
+  
+  const [notifications, setNotifications] = useState(true);
+  const [biometrics, setBiometrics] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
       'Logout',
-      'Are you sure you want to logout?',
+      'Are you sure you want to end your session?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Logout',
           style: 'destructive',
           onPress: () => {
-            // Navigate back to login
             router.replace('/');
           },
         },
@@ -66,126 +99,133 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleEditProfile = () => {
+    Alert.alert('Edit Profile', 'Opening profile editor...');
+  };
+
+  const handleChangePassword = () => {
+    Alert.alert('Security', 'Password change flow initiated.');
+  };
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Profile Header */}
-      <View style={styles.profileHeader}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>MT</Text>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
+      contentContainerStyle={{ paddingBottom: Spacing['3xl'] }}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Header Section */}
+      <View style={[styles.header, { backgroundColor: colors.primary.main }]}>
+        <View style={styles.headerContent}>
+          <View style={[styles.avatarContainer, { borderColor: colors.primary.contrast }]}>
+            <Text style={[styles.avatarText, { color: colors.primary.main }]}>MT</Text>
+            <TouchableOpacity style={[styles.editBadge, { backgroundColor: colors.secondary.main }]}>
+                <Ionicons name="pencil" size={14} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+          <Text style={[styles.name, { color: colors.primary.contrast }]}>Mr. Teacher</Text>
+          <Text style={[styles.role, { color: 'rgba(255,255,255,0.9)' }]}>Mathematics Department</Text>
         </View>
-        <Text style={styles.profileName}>Mr. Teacher</Text>
-        <Text style={styles.profileEmail}>teacher@school.edu</Text>
-        <Text style={styles.profileRole}>Mathematics Teacher</Text>
       </View>
 
-      {/* Stats Section */}
-      <View style={styles.statsSection}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>8</Text>
-          <Text style={styles.statLabel}>Classes</Text>
+      {/* Stats Cards */}
+      <View style={styles.statsContainer}>
+        <View style={[styles.statCard, { backgroundColor: colors.background.secondary, shadowColor: colors.ui.shadow }]}>
+          <Text style={[styles.statValue, { color: colors.primary.main }]}>8</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Classes</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>245</Text>
-          <Text style={styles.statLabel}>Students</Text>
+        <View style={[styles.statCard, { backgroundColor: colors.background.secondary, shadowColor: colors.ui.shadow }]}>
+          <Text style={[styles.statValue, { color: colors.secondary.main }]}>245</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Students</Text>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>5</Text>
-          <Text style={styles.statLabel}>Years</Text>
+        <View style={[styles.statCard, { backgroundColor: colors.background.secondary, shadowColor: colors.ui.shadow }]}>
+          <Text style={[styles.statValue, { color: colors.status.success.main }]}>4.8</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>Rating</Text>
         </View>
       </View>
 
       {/* Settings Sections */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <View style={styles.settingsGroup}>
+        <Text style={[styles.sectionHeader, { color: colors.text.tertiary }]}>ACCOUNT SETTINGS</Text>
+        <View style={[styles.card, { backgroundColor: colors.background.secondary }]}>
           <SettingItem
-            icon="👤"
-            title="Edit Profile"
-            subtitle="Update your personal information"
-            onPress={() => Alert.alert('Edit Profile', 'Profile editing coming soon')}
+            icon="person-outline"
+            title="Personal Information"
+            subtitle="Name, Email, Phone"
+            onPress={handleEditProfile}
           />
           <SettingItem
-            icon="🔒"
-            title="Change Password"
-            subtitle="Update your password"
-            onPress={() => Alert.alert('Change Password', 'Password change coming soon')}
+            icon="lock-closed-outline"
+            title="Security"
+            subtitle="Password, 2FA"
+            onPress={handleChangePassword}
           />
           <SettingItem
-            icon="🔐"
-            title="Privacy & Security"
-            subtitle="Manage your privacy settings"
-            onPress={() => Alert.alert('Privacy', 'Privacy settings coming soon')}
+            icon="finger-print-outline"
+            title="Biometric Login"
+            type="toggle"
+            value={biometrics}
+            onValueChange={setBiometrics}
           />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        <View style={styles.settingsGroup}>
+        <Text style={[styles.sectionHeader, { color: colors.text.tertiary }]}>PREFERENCES</Text>
+        <View style={[styles.card, { backgroundColor: colors.background.secondary }]}>
           <SettingItem
-            icon="🔔"
-            title="Notifications"
-            subtitle="Manage notification preferences"
-            onPress={() => Alert.alert('Notifications', 'Notification settings coming soon')}
-          />
-          <SettingItem
-            icon="🌙"
+            icon="moon-outline"
             title="Dark Mode"
-            subtitle="Switch to dark theme"
-            onPress={() => Alert.alert('Dark Mode', 'Dark mode coming soon')}
+            type="toggle"
+            value={isDark}
+            onValueChange={toggleTheme}
+            color={isDark ? '#FFD700' : '#5C5C5C'} // Yellow moon if active, grey otherwise
           />
           <SettingItem
-            icon="🌐"
+            icon="notifications-outline"
+            title="Notifications"
+            type="toggle"
+            value={notifications}
+            onValueChange={setNotifications}
+            color={colors.status.warning.main}
+          />
+           <SettingItem
+            icon="language-outline"
             title="Language"
-            subtitle="English"
-            onPress={() => Alert.alert('Language', 'Language selection coming soon')}
+            subtitle="English (US)"
+            onPress={() => Alert.alert('Language', 'Language selection dialog')}
+            color={colors.status.info.main}
           />
         </View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Support</Text>
-        <View style={styles.settingsGroup}>
+        <Text style={[styles.sectionHeader, { color: colors.text.tertiary }]}>SUPPORT</Text>
+        <View style={[styles.card, { backgroundColor: colors.background.secondary }]}>
           <SettingItem
-            icon="❓"
-            title="Help & Support"
-            subtitle="Get help and contact support"
-            onPress={() => Alert.alert('Help', 'Help center coming soon')}
+            icon="help-circle-outline"
+            title="Help Center"
+            onPress={() => Alert.alert('Help', 'Navigating to Help Center...')}
           />
           <SettingItem
-            icon="📄"
-            title="Terms & Conditions"
-            onPress={() => Alert.alert('Terms', 'Terms & Conditions coming soon')}
-          />
-          <SettingItem
-            icon="🔒"
-            title="Privacy Policy"
-            onPress={() => Alert.alert('Privacy', 'Privacy Policy coming soon')}
-          />
-          <SettingItem
-            icon="ℹ️"
-            title="About"
-            subtitle="Version 1.0.0"
-            onPress={() => Alert.alert('About', 'Teacher Mobile App v1.0.0')}
+            icon="information-circle-outline"
+            title="About App"
+            subtitle="v1.0.0"
+            onPress={() => Alert.alert('About', 'Teacher Mobile App\nVersion 1.0.0\nBuild 2024.12.13')}
           />
         </View>
       </View>
 
-      {/* Logout Button */}
-      <View style={styles.logoutSection}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutIcon}>🚪</Text>
-          <Text style={styles.logoutText}>Logout</Text>
+      <View style={styles.footer}>
+        <TouchableOpacity 
+            style={[styles.logoutButton, { borderColor: colors.status.error.main, backgroundColor: colors.status.error.background }]} 
+            onPress={handleLogout}
+        >
+            <Ionicons name="log-out-outline" size={20} color={colors.status.error.text} />
+            <Text style={[styles.logoutText, { color: colors.status.error.text }]}>Log Out</Text>
         </TouchableOpacity>
+        <Text style={[styles.versionText, { color: colors.text.tertiary }]}>Teacher App Suite © 2025</Text>
       </View>
 
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Teacher Mobile App</Text>
-        <Text style={styles.footerVersion}>Version 1.0.0</Text>
-      </View>
     </ScrollView>
   );
 }
@@ -193,103 +233,111 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background.primary,
   },
-  profileHeader: {
+  header: {
+    paddingTop: Spacing['3xl'], // Safe area padding mock
+    paddingBottom: Spacing['2xl'],
+    borderBottomLeftRadius: BorderRadius['2xl'],
+    borderBottomRightRadius: BorderRadius['2xl'],
     alignItems: 'center',
-    padding: Spacing.xl,
-    backgroundColor: AppColors.primary.main,
+    marginBottom: Spacing.xl,
+  },
+  headerContent: {
+    alignItems: 'center',
   },
   avatarContainer: {
     width: 100,
     height: 100,
-    borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.primary.contrast,
+    borderRadius: 50,
+    backgroundColor: '#F0F0F0',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
+    borderWidth: 4,
+    position: 'relative',
   },
   avatarText: {
-    fontSize: FontSizes['3xl'],
+    fontSize: 32,
     fontWeight: 'bold',
-    color: AppColors.primary.main,
   },
-  profileName: {
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+  },
+  name: {
     fontSize: FontSizes['2xl'],
     fontWeight: 'bold',
-    color: AppColors.primary.contrast,
     marginBottom: Spacing.xs,
   },
-  profileEmail: {
-    fontSize: FontSizes.sm,
-    color: AppColors.primary.contrast,
+  role: {
+    fontSize: FontSizes.base,
     opacity: 0.9,
-    marginBottom: Spacing.xs,
   },
-  profileRole: {
-    fontSize: FontSizes.sm,
-    color: AppColors.primary.contrast,
-    opacity: 0.8,
-  },
-  statsSection: {
+  statsContainer: {
     flexDirection: 'row',
-    backgroundColor: AppColors.background.secondary,
-    padding: Spacing.lg,
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    marginTop: -Spacing['2xl'],
+    marginBottom: Spacing.lg,
   },
-  statItem: {
+  statCard: {
+    flex: 1,
+    marginHorizontal: Spacing.xs,
+    padding: Spacing.md,
+    borderRadius: BorderRadius.xl,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   statValue: {
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes.xl,
     fontWeight: 'bold',
-    color: AppColors.primary.main,
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: FontSizes.sm,
-    color: AppColors.text.secondary,
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: AppColors.ui.divider,
+    fontSize: FontSizes.xs,
+    fontWeight: '600',
+    textTransform: 'uppercase',
   },
   section: {
-    marginTop: Spacing.lg,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
-  sectionTitle: {
-    fontSize: FontSizes.base,
-    fontWeight: '600',
-    color: AppColors.text.secondary,
-    marginBottom: Spacing.sm,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  sectionHeader: {
+    fontSize: FontSizes.xs,
+    fontWeight: 'bold',
+    marginBottom: Spacing.md,
+    marginLeft: Spacing.xs,
+    letterSpacing: 1,
   },
-  settingsGroup: {
-    backgroundColor: AppColors.background.secondary,
-    borderRadius: BorderRadius.lg,
+  card: {
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.md,
-    backgroundColor: AppColors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.ui.divider,
   },
   settingIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.md,
-    backgroundColor: AppColors.background.secondary,
+    width: 36,
+    height: 36,
+    borderRadius: BorderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,
-  },
-  iconText: {
-    fontSize: 20,
   },
   settingContent: {
     flex: 1,
@@ -297,52 +345,33 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: FontSizes.base,
     fontWeight: '600',
-    color: AppColors.text.primary,
     marginBottom: 2,
   },
   settingSubtitle: {
-    fontSize: FontSizes.sm,
-    color: AppColors.text.secondary,
+    fontSize: FontSizes.xs,
   },
-  arrowIcon: {
-    fontSize: 24,
-    color: AppColors.text.tertiary,
-  },
-  logoutSection: {
-    padding: Spacing.md,
-    marginTop: Spacing.lg,
+  footer: {
+    padding: Spacing.lg,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: AppColors.status.error.background,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing['2xl'],
+    borderRadius: BorderRadius.full,
     borderWidth: 1,
-    borderColor: AppColors.status.error.main,
-  },
-  logoutIcon: {
-    fontSize: 20,
-    marginRight: Spacing.sm,
+    width: '100%',
+    marginBottom: Spacing.lg,
   },
   logoutText: {
     fontSize: FontSizes.base,
     fontWeight: '600',
-    color: AppColors.status.error.text,
+    marginLeft: Spacing.sm,
   },
-  footer: {
-    alignItems: 'center',
-    padding: Spacing.xl,
-    marginTop: Spacing.lg,
-  },
-  footerText: {
-    fontSize: FontSizes.sm,
-    color: AppColors.text.tertiary,
-    marginBottom: Spacing.xs,
-  },
-  footerVersion: {
+  versionText: {
     fontSize: FontSizes.xs,
-    color: AppColors.text.tertiary,
   },
 });

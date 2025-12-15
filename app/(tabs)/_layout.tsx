@@ -1,48 +1,37 @@
-/**
- * Tab Layout - Bottom Navigation
- * 
- * Tabs:
- * - Dashboard (Home)
- * - Classes (My Classes)
- * - Attendance (Quick Action)
- * - Profile (Settings)
- */
-
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { AppColors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/context/ThemeContext';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform } from 'react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colors, isDark } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
         // Use Primary color for active tab
-        tabBarActiveTintColor: AppColors.primary.main,
-        tabBarInactiveTintColor: AppColors.text.tertiary,
+        tabBarActiveTintColor: colors.primary.main,
+        tabBarInactiveTintColor: colors.text.tertiary,
         headerShown: true,
         headerStyle: {
-          backgroundColor: AppColors.primary.main,
+          backgroundColor: colors.primary.main,
         },
-        headerTintColor: AppColors.primary.contrast,
+        headerTintColor: colors.primary.contrast,
         headerTitleStyle: {
           fontWeight: '600',
         },
         tabBarStyle: {
-          backgroundColor: AppColors.background.primary,
-          borderTopColor: AppColors.ui.border,
+          backgroundColor: colors.background.secondary, // Use secondary for tab bar
+          borderTopColor: colors.ui.border,
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? 88 : 60,
           paddingBottom: Platform.OS === 'ios' ? 24 : 8,
           paddingTop: 8,
           elevation: 8,
-          shadowColor: '#000',
+          shadowColor: isDark ? '#000000' : '#000000',
           shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: isDark ? 0.3 : 0.1,
           shadowRadius: 8,
         },
         tabBarLabelStyle: {

@@ -10,17 +10,19 @@
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { AppColors, BorderRadius, FontSizes, Spacing } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import QRScanner from '@/components/attendance/QRScanner';
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | null;
 
@@ -42,9 +44,11 @@ interface ClassSchedule {
 }
 
 export default function AttendanceScreen() {
+  const { colors, isDark } = useTheme();
   const [currentClass, setCurrentClass] = useState<ClassSchedule | null>(null);
   const [selectedClass, setSelectedClass] = useState<ClassSchedule | null>(null);
   const [showClassPicker, setShowClassPicker] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [students, setStudents] = useState<Student[]>([]);
 
@@ -197,25 +201,26 @@ export default function AttendanceScreen() {
   };
 
   const handleQRScan = () => {
-    Alert.alert(
-      '📱 QR Code Scanner',
-      'QR code scanner will open here.\n\nStudents can scan their ID cards for quick attendance marking.',
-      [{ text: 'OK' }]
-    );
+    setShowQRScanner(true);
+  };
+
+  const handleStudentScan = (studentId: string) => {
+    // Automatically mark student as present when scanned
+    markAttendance(studentId, 'present');
   };
 
   const counts = getStatusCounts();
   const isCurrentClass = currentClass?.id === selectedClass?.id;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.primary.main }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>Take Attendance</Text>
+            <Text style={[styles.headerTitle, { color: colors.primary.contrast }]}>Take Attendance</Text>
             {selectedClass && (
-              <Text style={styles.headerSubtitle}>{selectedClass.className}</Text>
+              <Text style={[styles.headerSubtitle, { color: colors.primary.contrast }]}>{selectedClass.className}</Text>
             )}
           </View>
           <TouchableOpacity
@@ -223,7 +228,7 @@ export default function AttendanceScreen() {
             onPress={handleQRScan}
             activeOpacity={0.7}
           >
-            <IconSymbol name="qrcode" size={24} color={AppColors.primary.contrast} />
+            <IconSymbol name="qrcode" size={24} color={colors.primary.contrast} />
           </TouchableOpacity>
         </View>
 
@@ -231,7 +236,7 @@ export default function AttendanceScreen() {
         {isCurrentClass && currentClass && (
           <View style={styles.currentClassBanner}>
             <View style={styles.currentClassDot} />
-            <Text style={styles.currentClassText}>
+            <Text style={[styles.currentClassText, { color: colors.primary.contrast }]}>
               🔴 LIVE NOW: {currentClass.startTime} - {currentClass.endTime}
             </Text>
           </View>
@@ -239,56 +244,56 @@ export default function AttendanceScreen() {
 
         {/* Class Selector */}
         <TouchableOpacity
-          style={styles.classSelector}
+          style={[styles.classSelector, { backgroundColor: colors.ui.card }]}
           onPress={() => setShowClassPicker(true)}
           activeOpacity={0.7}
         >
           <View style={styles.classSelectorLeft}>
-            <IconSymbol name="book.fill" size={20} color={AppColors.primary.main} />
+            <IconSymbol name="book.fill" size={20} color={colors.primary.main} />
             <View style={styles.classSelectorText}>
-              <Text style={styles.classSelectorTitle}>
+              <Text style={[styles.classSelectorTitle, { color: colors.text.primary }]}>
                 {selectedClass?.subject || 'Select Class'}
               </Text>
-              <Text style={styles.classSelectorSubtitle}>
+              <Text style={[styles.classSelectorSubtitle, { color: colors.text.secondary }]}>
                 {selectedClass?.room} • {selectedClass?.startTime}
               </Text>
             </View>
           </View>
-          <IconSymbol name="chevron.down" size={20} color={AppColors.text.secondary} />
+          <IconSymbol name="chevron.down" size={20} color={colors.text.secondary} />
         </TouchableOpacity>
       </View>
 
       {/* Stats */}
       <View style={styles.statsContainer}>
-        <View style={[styles.statBox, { backgroundColor: AppColors.status.success.background }]}>
-          <Text style={[styles.statNumber, { color: AppColors.status.success.main }]}>
+        <View style={[styles.statBox, { backgroundColor: colors.status.success.background }]}>
+          <Text style={[styles.statNumber, { color: colors.status.success.main }]}>
             {counts.present}
           </Text>
-          <Text style={[styles.statLabel, { color: AppColors.status.success.text }]}>
+          <Text style={[styles.statLabel, { color: colors.status.success.text }]}>
             Present
           </Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: AppColors.status.warning.background }]}>
-          <Text style={[styles.statNumber, { color: AppColors.status.warning.main }]}>
+        <View style={[styles.statBox, { backgroundColor: colors.status.warning.background }]}>
+          <Text style={[styles.statNumber, { color: colors.status.warning.main }]}>
             {counts.late}
           </Text>
-          <Text style={[styles.statLabel, { color: AppColors.status.warning.text }]}>
+          <Text style={[styles.statLabel, { color: colors.status.warning.text }]}>
             Late
           </Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: AppColors.status.error.background }]}>
-          <Text style={[styles.statNumber, { color: AppColors.status.error.main }]}>
+        <View style={[styles.statBox, { backgroundColor: colors.status.error.background }]}>
+          <Text style={[styles.statNumber, { color: colors.status.error.main }]}>
             {counts.absent}
           </Text>
-          <Text style={[styles.statLabel, { color: AppColors.status.error.text }]}>
+          <Text style={[styles.statLabel, { color: colors.status.error.text }]}>
             Absent
           </Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: AppColors.background.secondary }]}>
-          <Text style={[styles.statNumber, { color: AppColors.text.secondary }]}>
+        <View style={[styles.statBox, { backgroundColor: colors.background.secondary }]}>
+          <Text style={[styles.statNumber, { color: colors.text.secondary }]}>
             {counts.unmarked}
           </Text>
-          <Text style={[styles.statLabel, { color: AppColors.text.secondary }]}>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
             Unmarked
           </Text>
         </View>
@@ -297,12 +302,12 @@ export default function AttendanceScreen() {
       {/* Mark All Button */}
       <View style={styles.markAllContainer}>
         <TouchableOpacity
-          style={styles.markAllButton}
+          style={[styles.markAllButton, { backgroundColor: colors.status.success.main }]}
           onPress={markAllPresent}
           activeOpacity={0.7}
         >
-          <IconSymbol name="checkmark.circle.fill" size={20} color={AppColors.primary.contrast} />
-          <Text style={styles.markAllButtonText}>Mark All Present</Text>
+          <IconSymbol name="checkmark.circle.fill" size={20} color={colors.primary.contrast} />
+          <Text style={[styles.markAllButtonText, { color: colors.primary.contrast }]}>Mark All Present</Text>
         </TouchableOpacity>
       </View>
 
@@ -312,14 +317,14 @@ export default function AttendanceScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.studentList}
         renderItem={({ item }) => (
-          <View style={styles.studentCard}>
+          <View style={[styles.studentCard, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
             <View style={styles.studentInfo}>
-              <View style={styles.studentAvatar}>
-                <Text style={styles.avatarText}>{getInitials(item.name)}</Text>
+              <View style={[styles.studentAvatar, { backgroundColor: colors.primary.main }]}>
+                <Text style={[styles.avatarText, { color: colors.primary.contrast }]}>{getInitials(item.name)}</Text>
               </View>
               <View style={styles.studentDetails}>
-                <Text style={styles.studentName}>{item.name}</Text>
-                <Text style={styles.studentRoll}>Roll No: {item.rollNumber}</Text>
+                <Text style={[styles.studentName, { color: colors.text.primary }]}>{item.name}</Text>
+                <Text style={[styles.studentRoll, { color: colors.text.secondary }]}>Roll No: {item.rollNumber}</Text>
               </View>
             </View>
 
@@ -332,16 +337,16 @@ export default function AttendanceScreen() {
               >
                 <View style={[
                   styles.radioOuter,
-                  { borderColor: AppColors.status.success.main },
-                  item.status === 'present' && { backgroundColor: AppColors.status.success.main },
+                  { borderColor: colors.status.success.main },
+                  item.status === 'present' && { backgroundColor: colors.status.success.main },
                 ]}>
                   {item.status === 'present' && (
-                    <View style={styles.radioInner} />
+                    <View style={[styles.radioInner, { backgroundColor: colors.primary.contrast }]} />
                   )}
                 </View>
                 <Text style={[
                   styles.radioLabel,
-                  item.status === 'present' && { color: AppColors.status.success.main, fontWeight: '700' },
+                  { color: item.status === 'present' ? colors.status.success.main : colors.text.secondary, fontWeight: item.status === 'present' ? '700' : '400' },
                 ]}>
                   P
                 </Text>
@@ -355,16 +360,16 @@ export default function AttendanceScreen() {
               >
                 <View style={[
                   styles.radioOuter,
-                  { borderColor: AppColors.status.warning.main },
-                  item.status === 'late' && { backgroundColor: AppColors.status.warning.main },
+                  { borderColor: colors.status.warning.main },
+                  item.status === 'late' && { backgroundColor: colors.status.warning.main },
                 ]}>
                   {item.status === 'late' && (
-                    <View style={styles.radioInner} />
+                    <View style={[styles.radioInner, { backgroundColor: colors.primary.contrast }]} />
                   )}
                 </View>
                 <Text style={[
                   styles.radioLabel,
-                  item.status === 'late' && { color: AppColors.status.warning.main, fontWeight: '700' },
+                  { color: item.status === 'late' ? colors.status.warning.main : colors.text.secondary, fontWeight: item.status === 'late' ? '700' : '400' },
                 ]}>
                   L
                 </Text>
@@ -378,16 +383,16 @@ export default function AttendanceScreen() {
               >
                 <View style={[
                   styles.radioOuter,
-                  { borderColor: AppColors.status.error.main },
-                  item.status === 'absent' && { backgroundColor: AppColors.status.error.main },
+                  { borderColor: colors.status.error.main },
+                  item.status === 'absent' && { backgroundColor: colors.status.error.main },
                 ]}>
                   {item.status === 'absent' && (
-                    <View style={styles.radioInner} />
+                    <View style={[styles.radioInner, { backgroundColor: colors.primary.contrast }]} />
                   )}
                 </View>
                 <Text style={[
                   styles.radioLabel,
-                  item.status === 'absent' && { color: AppColors.status.error.main, fontWeight: '700' },
+                  { color: item.status === 'absent' ? colors.status.error.main : colors.text.secondary, fontWeight: item.status === 'absent' ? '700' : '400' },
                 ]}>
                   A
                 </Text>
@@ -398,14 +403,14 @@ export default function AttendanceScreen() {
       />
 
       {/* Submit Button */}
-      <View style={styles.submitContainer}>
+      <View style={[styles.submitContainer, { backgroundColor: colors.background.primary, borderTopColor: colors.ui.border }]}>
         <TouchableOpacity
-          style={styles.submitButton}
+          style={[styles.submitButton, { backgroundColor: colors.primary.main }]}
           onPress={submitAttendance}
           activeOpacity={0.8}
         >
-          <IconSymbol name="checkmark.seal.fill" size={20} color={AppColors.primary.contrast} />
-          <Text style={styles.submitButtonText}>Submit Attendance</Text>
+          <IconSymbol name="checkmark.seal.fill" size={20} color={colors.primary.contrast} />
+          <Text style={[styles.submitButtonText, { color: colors.primary.contrast }]}>Submit Attendance</Text>
         </TouchableOpacity>
       </View>
 
@@ -416,15 +421,15 @@ export default function AttendanceScreen() {
         animationType="slide"
         onRequestClose={() => setShowClassPicker(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.pickerModal}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>Select Class</Text>
+        <View style={[styles.modalOverlay, { backgroundColor: colors.ui.overlay }]}>
+          <View style={[styles.pickerModal, { backgroundColor: colors.ui.card }]}>
+            <View style={[styles.pickerHeader, { borderBottomColor: colors.ui.border }]}>
+              <Text style={[styles.pickerTitle, { color: colors.text.primary }]}>Select Class</Text>
               <TouchableOpacity
                 onPress={() => setShowClassPicker(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <IconSymbol name="xmark" size={24} color={AppColors.text.secondary} />
+                <IconSymbol name="xmark" size={24} color={colors.text.secondary} />
               </TouchableOpacity>
             </View>
 
@@ -438,7 +443,8 @@ export default function AttendanceScreen() {
                     key={cls.id}
                     style={[
                       styles.pickerItem,
-                      isSelected && styles.pickerItemSelected,
+                      { borderBottomColor: colors.ui.divider },
+                      isSelected && { backgroundColor: isDark ? colors.background.tertiary : colors.background.secondary },
                     ]}
                     onPress={() => {
                       setSelectedClass(cls);
@@ -448,21 +454,21 @@ export default function AttendanceScreen() {
                   >
                     <View style={styles.pickerItemLeft}>
                       <View style={styles.pickerItemHeader}>
-                        <Text style={styles.pickerItemTitle}>{cls.className}</Text>
+                        <Text style={[styles.pickerItemTitle, { color: colors.text.primary }]}>{cls.className}</Text>
                         {isCurrent && (
                           <View style={styles.liveBadge}>
-                            <View style={styles.liveDot} />
+                            <View style={[styles.liveDot, { backgroundColor: colors.primary.contrast }]} />
                             <Text style={styles.liveText}>LIVE</Text>
                           </View>
                         )}
                       </View>
-                      <Text style={styles.pickerItemSubject}>{cls.subject}</Text>
-                      <Text style={styles.pickerItemTime}>
+                      <Text style={[styles.pickerItemSubject, { color: colors.text.secondary }]}>{cls.subject}</Text>
+                      <Text style={[styles.pickerItemTime, { color: colors.text.tertiary }]}>
                         {cls.room} • {cls.startTime} - {cls.endTime}
                       </Text>
                     </View>
                     {isSelected && (
-                      <IconSymbol name="checkmark" size={24} color={AppColors.primary.main} />
+                      <IconSymbol name="checkmark" size={24} color={colors.primary.main} />
                     )}
                   </TouchableOpacity>
                 );
@@ -471,6 +477,14 @@ export default function AttendanceScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* QR Scanner Modal */}
+      <QRScanner
+        visible={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        onScan={handleStudentScan}
+        currentClassStudents={students}
+      />
     </View>
   );
 }
