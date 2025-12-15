@@ -312,7 +312,6 @@ export default function ClassesScreen() {
             item={item}
             onView={handleViewClass}
             onTakeAttendance={handleTakeAttendance}
-            onCreateAssignment={handleCreateAssignment}
           />
         )}
         keyExtractor={(item) => item.id}

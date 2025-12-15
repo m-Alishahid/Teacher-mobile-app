@@ -1,11 +1,26 @@
+/**
+ * Professional Assignment Form Modal
+ * 
+ * Features:
+ * - Native DateTimePicker for date/time selection
+ * - Image & Document picker from device
+ * - Beautiful toast notifications
+ * - Form validation
+ * - Smooth animations
+ */
+
 import { BorderRadius, FontSizes, Spacing } from '@/constants/theme';
 import { useTheme } from '@/context/ThemeContext';
 import { ClassItem } from '@/types/classes';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
     Modal,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -21,6 +36,13 @@ interface AssignmentFormModalProps {
   selectedClass: ClassItem | null;
 }
 
+interface Attachment {
+  name: string;
+  type: string;
+  size: string;
+  uri?: string;
+}
+
 export function AssignmentFormModal({
   visible,
   onClose,
@@ -29,20 +51,25 @@ export function AssignmentFormModal({
   const { colors } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
+  const toastAnim = useRef(new Animated.Value(0)).current;
 
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [submissionInstructions, setSubmissionInstructions] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [dueTime, setDueTime] = useState('');
+  const [dueDate, setDueDate] = useState(new Date());
+  const [dueTime, setDueTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [totalMarks, setTotalMarks] = useState('');
   const [assignmentType, setAssignmentType] = useState<'homework' | 'project' | 'quiz' | 'exam'>('homework');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [attachments, setAttachments] = useState<Array<{name: string, type: string, size: string}>>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [allowLateSubmission, setAllowLateSubmission] = useState(false);
   const [notifyStudents, setNotifyStudents] = useState(true);
   const [autoGrade, setAutoGrade] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
 
   useEffect(() => {
     if (visible) {
@@ -75,12 +102,31 @@ export function AssignmentFormModal({
     }
   }, [visible]);
 
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    
+    Animated.sequence([
+      Animated.timing(toastAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(2500),
+      Animated.timing(toastAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const resetForm = () => {
     setTitle('');
     setDescription('');
     setSubmissionInstructions('');
-    setDueDate('');
-    setDueTime('');
+    setDueDate(new Date());
+    setDueTime(new Date());
     setTotalMarks('');
     setAssignmentType('homework');
     setPriority('medium');
@@ -90,53 +136,111 @@ export function AssignmentFormModal({
     setAutoGrade(false);
   };
 
+  const handlePickImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        showToast('Permission to access gallery is required!', 'error');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: false,
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const fileName = asset.uri.split('/').pop() || 'image.jpg';
+        const fileSize = asset.fileSize ? `${(asset.fileSize / 1024).toFixed(0)} KB` : 'Unknown';
+        
+        const newAttachment: Attachment = {
+          name: fileName,
+          type: 'image',
+          size: fileSize,
+          uri: asset.uri,
+        };
+        
+        setAttachments([...attachments, newAttachment]);
+        showToast('Image added successfully!', 'success');
+      }
+    } catch (error) {
+      showToast('Failed to pick image', 'error');
+      console.error('Image picker error:', error);
+    }
+  };
+
+  const handlePickDocument = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        const fileSize = asset.size ? `${(asset.size / 1024).toFixed(0)} KB` : 'Unknown';
+        
+        const newAttachment: Attachment = {
+          name: asset.name,
+          type: asset.mimeType?.includes('pdf') ? 'pdf' : 'document',
+          size: fileSize,
+          uri: asset.uri,
+        };
+        
+        setAttachments([...attachments, newAttachment]);
+        showToast('Document added successfully!', 'success');
+      }
+    } catch (error) {
+      showToast('Failed to pick document', 'error');
+      console.error('Document picker error:', error);
+    }
+  };
+
   const handleAddAttachment = () => {
     Alert.alert(
       '📎 Add Attachment',
       'Choose attachment type',
       [
         {
-          text: '📄 Document',
-          onPress: () => {
-            const newAttachment = {
-              name: `Assignment_Document_${attachments.length + 1}.pdf`,
-              type: 'pdf',
-              size: `${Math.floor(Math.random() * 500 + 100)} KB`
-            };
-            setAttachments([...attachments, newAttachment]);
-          },
+          text: '🖼️ Image from Gallery',
+          onPress: handlePickImage,
         },
         {
-          text: '🖼️ Image',
-          onPress: () => {
-            const newAttachment = {
-              name: `Assignment_Image_${attachments.length + 1}.jpg`,
-              type: 'image',
-              size: `${Math.floor(Math.random() * 800 + 200)} KB`
-            };
-            setAttachments([...attachments, newAttachment]);
-          },
+          text: '📄 Document/PDF',
+          onPress: handlePickDocument,
         },
         {
-          text: '🎥 Video',
-          onPress: () => {
-            const newAttachment = {
-              name: `Assignment_Video_${attachments.length + 1}.mp4`,
-              type: 'video',
-              size: `${Math.floor(Math.random() * 5 + 2)} MB`
-            };
-            setAttachments([...attachments, newAttachment]);
-          },
-        },
-        {
-          text: '🔗 Link',
-          onPress: () => {
-            const newAttachment = {
-              name: `Reference_Link_${attachments.length + 1}`,
-              type: 'link',
-              size: '-'
-            };
-            setAttachments([...attachments, newAttachment]);
+          text: '📸 Take Photo',
+          onPress: async () => {
+            const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+            
+            if (!permissionResult.granted) {
+              showToast('Camera permission is required!', 'error');
+              return;
+            }
+
+            const result = await ImagePicker.launchCameraAsync({
+              quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+              const asset = result.assets[0];
+              const fileName = `photo_${Date.now()}.jpg`;
+              const fileSize = asset.fileSize ? `${(asset.fileSize / 1024).toFixed(0)} KB` : 'Unknown';
+              
+              const newAttachment: Attachment = {
+                name: fileName,
+                type: 'image',
+                size: fileSize,
+                uri: asset.uri,
+              };
+              
+              setAttachments([...attachments, newAttachment]);
+              showToast('Photo added successfully!', 'success');
+            }
           },
         },
         { text: 'Cancel', style: 'cancel' },
@@ -146,90 +250,79 @@ export function AssignmentFormModal({
 
   const handleRemoveAttachment = (index: number) => {
     setAttachments(attachments.filter((_, i) => i !== index));
+    showToast('Attachment removed', 'info');
   };
 
-  const handleDatePicker = () => {
-    // In a real app, this would open a native date picker
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextWeek = new Date(today);
-    nextWeek.setDate(nextWeek.getDate() + 7);
-
-    Alert.alert(
-      '📅 Select Due Date',
-      'Choose a date or enter custom',
-      [
-        {
-          text: 'Tomorrow',
-          onPress: () => setDueDate(tomorrow.toLocaleDateString('en-GB')),
-        },
-        {
-          text: 'Next Week',
-          onPress: () => setDueDate(nextWeek.toLocaleDateString('en-GB')),
-        },
-        { text: 'Custom', style: 'cancel' },
-      ]
-    );
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDueDate(selectedDate);
+    }
   };
 
-  const handleTimePicker = () => {
-    Alert.alert(
-      '⏰ Select Time',
-      'Choose a time',
-      [
-        { text: '09:00 AM', onPress: () => setDueTime('09:00 AM') },
-        { text: '12:00 PM', onPress: () => setDueTime('12:00 PM') },
-        { text: '03:00 PM', onPress: () => setDueTime('03:00 PM') },
-        { text: '11:59 PM', onPress: () => setDueTime('11:59 PM') },
-        { text: 'Custom', style: 'cancel' },
-      ]
-    );
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedTime) {
+      setDueTime(selectedTime);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
   };
 
   const handleSubmit = () => {
     // Validation
     if (!title.trim()) {
-      Alert.alert('⚠️ Required Field', 'Please enter assignment title');
+      showToast('Please enter assignment title', 'error');
       return;
     }
     if (!description.trim()) {
-      Alert.alert('⚠️ Required Field', 'Please enter assignment description');
-      return;
-    }
-    if (!dueDate.trim()) {
-      Alert.alert('⚠️ Required Field', 'Please enter due date');
+      showToast('Please enter assignment description', 'error');
       return;
     }
     if (!totalMarks.trim()) {
-      Alert.alert('⚠️ Required Field', 'Please enter total marks');
+      showToast('Please enter total marks', 'error');
       return;
     }
 
     // Success
     const successDetails = [
       `📚 Type: ${assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1)}`,
-      `📅 Due: ${dueDate}${dueTime ? ` at ${dueTime}` : ''}`,
+      `📅 Due: ${formatDate(dueDate)} at ${formatTime(dueTime)}`,
       `📊 Total Marks: ${totalMarks}`,
       attachments.length > 0 ? `📎 ${attachments.length} attachment(s)` : '',
-      notifyStudents ? '🔔 Students will be notified' : '',
+      notifyStudents ? `🔔 ${selectedClass?.totalStudents} students will be notified` : '',
       allowLateSubmission ? '⏰ Late submission allowed' : '',
       autoGrade ? '✨ Auto-grading enabled' : '',
     ].filter(Boolean).join('\n');
 
     Alert.alert(
-      '✅ Assignment Created Successfully!',
+      '✅ Assignment Created!',
       `"${title}" has been created for ${selectedClass?.className}.\n\n${successDetails}`,
       [
         {
           text: 'Create Another',
           onPress: () => {
             resetForm();
+            showToast('Ready for new assignment', 'info');
           },
         },
         {
           text: 'Done',
-          style: 'cancel',
+          style: 'default',
           onPress: () => {
             resetForm();
             onClose();
@@ -240,7 +333,7 @@ export function AssignmentFormModal({
   };
 
   const handleClose = () => {
-    if (title || description || dueDate || totalMarks) {
+    if (title || description || totalMarks || attachments.length > 0) {
       Alert.alert(
         'Discard Changes?',
         'You have unsaved changes. Are you sure you want to close?',
@@ -451,53 +544,39 @@ export function AssignmentFormModal({
                   <Text style={[styles.label, { color: colors.text.secondary }]}>
                     Date <Text style={{ color: colors.status.error.main }}>*</Text>
                   </Text>
-                  <View style={styles.inputWithButton}>
-                    <TextInput
-                      style={[
-                        styles.inputFlex,
-                        {
-                          backgroundColor: colors.background.secondary,
-                          color: colors.text.primary,
-                          borderColor: colors.ui.border,
-                        },
-                      ]}
-                      placeholder="DD/MM/YYYY"
-                      placeholderTextColor={colors.text.tertiary}
-                      value={dueDate}
-                      onChangeText={setDueDate}
-                    />
-                    <TouchableOpacity 
-                      style={[styles.pickerButton, { backgroundColor: colors.primary.main }]}
-                      onPress={handleDatePicker}
-                    >
-                      <IconSymbol name="calendar" size={18} color={colors.primary.contrast} />
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.dateTimeButton,
+                      {
+                        backgroundColor: colors.background.secondary,
+                        borderColor: colors.ui.border,
+                      },
+                    ]}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <IconSymbol name="calendar" size={20} color={colors.primary.main} />
+                    <Text style={[styles.dateTimeText, { color: colors.text.primary }]}>
+                      {formatDate(dueDate)}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={[styles.inputGroup, { flex: 1 }]}>
                   <Text style={[styles.label, { color: colors.text.secondary }]}>Time</Text>
-                  <View style={styles.inputWithButton}>
-                    <TextInput
-                      style={[
-                        styles.inputFlex,
-                        {
-                          backgroundColor: colors.background.secondary,
-                          color: colors.text.primary,
-                          borderColor: colors.ui.border,
-                        },
-                      ]}
-                      placeholder="HH:MM"
-                      placeholderTextColor={colors.text.tertiary}
-                      value={dueTime}
-                      onChangeText={setDueTime}
-                    />
-                    <TouchableOpacity 
-                      style={[styles.pickerButton, { backgroundColor: colors.primary.main }]}
-                      onPress={handleTimePicker}
-                    >
-                      <IconSymbol name="clock.fill" size={18} color={colors.primary.contrast} />
-                    </TouchableOpacity>
-                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.dateTimeButton,
+                      {
+                        backgroundColor: colors.background.secondary,
+                        borderColor: colors.ui.border,
+                      },
+                    ]}
+                    onPress={() => setShowTimePicker(true)}
+                  >
+                    <IconSymbol name="clock.fill" size={20} color={colors.primary.main} />
+                    <Text style={[styles.dateTimeText, { color: colors.text.primary }]}>
+                      {formatTime(dueTime)}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             </View>
@@ -601,7 +680,7 @@ export function AssignmentFormModal({
                             attachment.type === 'pdf' ? 'doc.fill' :
                             attachment.type === 'image' ? 'photo.fill' :
                             attachment.type === 'video' ? 'play.rectangle.fill' :
-                            'link'
+                            'doc.fill'
                           }
                           size={24}
                           color={
@@ -613,7 +692,7 @@ export function AssignmentFormModal({
                         />
                       </View>
                       <View style={styles.attachmentInfo}>
-                        <Text style={[styles.attachmentName, { color: colors.text.primary }]}>
+                        <Text style={[styles.attachmentName, { color: colors.text.primary }]} numberOfLines={1}>
                           {attachment.name}
                         </Text>
                         <Text style={[styles.attachmentSize, { color: colors.text.tertiary }]}>
@@ -636,7 +715,7 @@ export function AssignmentFormModal({
                     No attachments added
                   </Text>
                   <Text style={[styles.emptySubtext, { color: colors.text.tertiary }]}>
-                    Tap "Add File" to attach documents, images, or links
+                    Tap "Add File" to attach images or documents
                   </Text>
                 </View>
               )}
@@ -797,7 +876,59 @@ export function AssignmentFormModal({
               </Text>
             </TouchableOpacity>
           </View>
+
+          {/* Toast Notification */}
+          <Animated.View
+            style={[
+              styles.toast,
+              {
+                backgroundColor:
+                  toastType === 'success' ? colors.status.success.main :
+                  toastType === 'error' ? colors.status.error.main :
+                  colors.status.info.main,
+                opacity: toastAnim,
+                transform: [{
+                  translateY: toastAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-100, 0],
+                  }),
+                }],
+              },
+            ]}
+          >
+            <IconSymbol
+              name={
+                toastType === 'success' ? 'checkmark.circle.fill' :
+                toastType === 'error' ? 'xmark.circle.fill' :
+                'info.circle.fill'
+              }
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.toastText}>{toastMessage}</Text>
+          </Animated.View>
         </Animated.View>
+
+        {/* Date Picker */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={dueDate}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+            minimumDate={new Date()}
+          />
+        )}
+
+        {/* Time Picker */}
+        {showTimePicker && (
+          <DateTimePicker
+            value={dueTime}
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleTimeChange}
+          />
+        )}
       </View>
     </Modal>
   );
@@ -812,7 +943,6 @@ const styles = StyleSheet.create({
     height: '95%',
     borderTopLeftRadius: BorderRadius['2xl'],
     borderTopRightRadius: BorderRadius['2xl'],
-    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
@@ -824,8 +954,8 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
     flex: 1,
+    gap: Spacing.md,
   },
   headerIconContainer: {
     width: 56,
@@ -839,11 +969,11 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: FontSizes.xl,
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontWeight: '700',
   },
   headerSubtitle: {
     fontSize: FontSizes.sm,
+    marginTop: 2,
   },
   closeButton: {
     width: 40,
@@ -856,7 +986,8 @@ const styles = StyleSheet.create({
   },
   section: {
     padding: Spacing.lg,
-    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -866,33 +997,38 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: FontSizes.lg,
-    fontWeight: 'bold',
+    fontWeight: '700',
     marginBottom: Spacing.md,
   },
   inputGroup: {
     marginBottom: Spacing.md,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
   },
   label: {
     fontSize: FontSizes.sm,
     fontWeight: '600',
     marginBottom: Spacing.xs,
   },
+  charCounter: {
+    fontSize: FontSizes.xs,
+  },
   input: {
     borderWidth: 1,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
     padding: Spacing.md,
     fontSize: FontSizes.base,
   },
   textArea: {
     borderWidth: 1,
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.md,
     padding: Spacing.md,
     fontSize: FontSizes.base,
     minHeight: 100,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: Spacing.md,
   },
   typeGrid: {
     flexDirection: 'row',
@@ -902,29 +1038,41 @@ const styles = StyleSheet.create({
   typeCard: {
     flex: 1,
     minWidth: '47%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 2,
-    gap: Spacing.sm,
+    alignItems: 'center',
+    gap: Spacing.xs,
   },
   typeLabel: {
     fontSize: FontSizes.sm,
     fontWeight: '600',
   },
+  row: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  dateTimeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    gap: Spacing.sm,
+  },
+  dateTimeText: {
+    fontSize: FontSizes.base,
+    fontWeight: '500',
+  },
   priorityButtons: {
     flexDirection: 'row',
     gap: Spacing.xs,
-    marginTop: Spacing.xs,
   },
   priorityButton: {
     flex: 1,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
+    padding: Spacing.sm,
     borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
+    borderWidth: 2,
     alignItems: 'center',
   },
   priorityText: {
@@ -934,8 +1082,8 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: Spacing.xs,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
     gap: Spacing.xs,
   },
@@ -952,18 +1100,17 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     borderWidth: 1,
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
   attachmentIconContainer: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: BorderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   attachmentInfo: {
     flex: 1,
-    marginLeft: Spacing.xs,
   },
   attachmentName: {
     fontSize: FontSizes.sm,
@@ -977,50 +1124,20 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: Spacing.sm,
   },
   emptyText: {
-    fontSize: FontSizes.sm,
-    marginTop: Spacing.sm,
+    fontSize: FontSizes.base,
     fontWeight: '600',
   },
   emptySubtext: {
-    fontSize: FontSizes.xs,
-    marginTop: Spacing.xs,
+    fontSize: FontSizes.sm,
     textAlign: 'center',
-  },
-  labelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  charCounter: {
-    fontSize: FontSizes.xs,
-    fontWeight: '600',
-  },
-  inputWithButton: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  inputFlex: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    fontSize: FontSizes.base,
-  },
-  pickerButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   optionRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.sm,
@@ -1028,8 +1145,8 @@ const styles = StyleSheet.create({
   optionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
     flex: 1,
+    gap: Spacing.md,
   },
   optionText: {
     flex: 1,
@@ -1061,10 +1178,9 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: Spacing.md,
+    padding: Spacing.md,
     borderRadius: BorderRadius.full,
     alignItems: 'center',
-    justifyContent: 'center',
     borderWidth: 1,
   },
   cancelButtonText: {
@@ -1074,14 +1190,36 @@ const styles = StyleSheet.create({
   submitButton: {
     flex: 2,
     flexDirection: 'row',
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.full,
     gap: Spacing.sm,
   },
   submitButtonText: {
     fontSize: FontSizes.base,
-    fontWeight: 'bold',
+    fontWeight: '700',
+  },
+  toast: {
+    position: 'absolute',
+    top: Spacing.lg,
+    left: Spacing.lg,
+    right: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.lg,
+    gap: Spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  toastText: {
+    color: '#FFFFFF',
+    fontSize: FontSizes.base,
+    fontWeight: '600',
+    flex: 1,
   },
 });

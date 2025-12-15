@@ -25,6 +25,7 @@ import {
     Alert,
     Animated,
     Dimensions,
+    SafeAreaView,
     ScrollView,
     StyleSheet,
     Text,
@@ -308,7 +309,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.primary }]}>
       {/* Gradient Header */}
       <LinearGradient
         colors={isDark 
@@ -511,7 +512,7 @@ export default function DashboardScreen() {
         onClose={() => setShowReportModal(false)}
         stats={todayAttendance}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

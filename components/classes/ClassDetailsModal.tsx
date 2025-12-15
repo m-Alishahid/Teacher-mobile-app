@@ -207,8 +207,7 @@ export function ClassDetailsModal({
               <TouchableOpacity
                 style={[styles.detailsActionButton, { backgroundColor: colors.background.secondary }]}
                 onPress={() => {
-                  onClose();
-                  setTimeout(() => setShowAssignmentForm(true), 300);
+                  setShowAssignmentForm(true);
                 }}
                 activeOpacity={0.7}
               >

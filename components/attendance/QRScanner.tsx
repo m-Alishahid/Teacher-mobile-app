@@ -44,6 +44,11 @@ export default function QRScanner({ visible, onClose, onScan, currentClassStuden
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     if (scanned) return;
 
+    // Console log the raw QR scan response
+    console.log('=== QR CODE SCANNED ===');
+    console.log('Raw QR Data:', data);
+    console.log('Scan Time:', new Date().toLocaleTimeString());
+
     setScanned(true);
 
     // Find student in current class by ID or roll number
@@ -52,6 +57,14 @@ export default function QRScanner({ visible, onClose, onScan, currentClassStuden
     );
 
     if (student) {
+      // Console log found student details
+      console.log('✅ Student Found:');
+      console.log('  - ID:', student.id);
+      console.log('  - Name:', student.name);
+      console.log('  - Roll Number:', student.rollNumber);
+      console.log('  - Current Status:', student.status);
+      console.log('======================');
+
       setLastScannedStudent(student);
       onScan(student.id);
       
@@ -60,6 +73,12 @@ export default function QRScanner({ visible, onClose, onScan, currentClassStuden
         setScanned(false);
       }, 2000);
     } else {
+      // Console log when student not found
+      console.log('❌ Student NOT Found');
+      console.log('  - Scanned Data:', data);
+      console.log('  - Total Students in Class:', currentClassStudents.length);
+      console.log('======================');
+
       Alert.alert(
         '❌ Student Not Found',
         'This student is not enrolled in the current class.',
