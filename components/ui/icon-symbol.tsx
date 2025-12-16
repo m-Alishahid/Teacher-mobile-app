@@ -1,11 +1,14 @@
 // Fallback for using MaterialIcons on Android and web.
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
-import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import { SymbolViewProps, SymbolWeight } from "expo-symbols";
+import { ComponentProps } from "react";
+import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
+type IconMapping = Record<
+  SymbolViewProps["name"],
+  ComponentProps<typeof MaterialIcons>["name"]
+>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
@@ -15,53 +18,60 @@ type IconSymbolName = keyof typeof MAPPING;
  */
 const MAPPING = {
   // Navigation & UI
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
-  'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-  'chevron.down': 'keyboard-arrow-down',
-  'chevron.left': 'chevron-left',
-  'chevron.up': 'keyboard-arrow-up',
-  
+  "house.fill": "home",
+  "paperplane.fill": "send",
+  "chevron.left.forwardslash.chevron.right": "code",
+  "chevron.right": "chevron-right",
+  "chevron.down": "keyboard-arrow-down",
+  "chevron.left": "chevron-left",
+  "chevron.up": "keyboard-arrow-up",
+  "arrow.right": "arrow-forward",
+  "arrow.left": "arrow-back",
+  plus: "add",
+
   // Tab Icons
-  'book.fill': 'menu-book',
-  'checkmark.circle.fill': 'check-circle',
-  'person.fill': 'person',
-  'person.2.fill': 'people',
-  'person.3.fill': 'groups',
-  
+  "book.fill": "menu-book",
+  "checkmark.circle.fill": "check-circle",
+  "person.fill": "person",
+  "person.2.fill": "people",
+  "person.3.fill": "groups",
+
   // Common Actions
-  'bell.fill': 'notifications',
-  'calendar': 'calendar-today',
-  'clock': 'access-time',
-  'clock.fill': 'schedule',
-  'location.fill': 'location-on',
-  'eye.fill': 'visibility',
-  'qrcode': 'qr-code-scanner',
-  'checkmark': 'check',
-  'xmark.circle.fill': 'cancel',
-  'paperclip': 'attach-file',
-  
+  "bell.fill": "notifications",
+  calendar: "calendar-today",
+  clock: "access-time",
+  "clock.fill": "schedule",
+  "location.fill": "location-on",
+  "eye.fill": "visibility",
+  qrcode: "qr-code-scanner",
+  checkmark: "check",
+  "xmark.circle.fill": "cancel",
+  paperclip: "attach-file",
+
   // Documents & Files
-  'doc.text.fill': 'description',
-  'doc.fill': 'insert-drive-file',
-  'photo.fill': 'image',
-  
+  "doc.text.fill": "description",
+  "doc.fill": "insert-drive-file",
+  "photo.fill": "image",
+
   // Communication
-  'message.fill': 'message',
-  'phone.fill': 'phone',
-  'envelope.fill': 'email',
-  'bubble.left.and.bubble.right': 'chat',
-  
+  "message.fill": "message",
+  "phone.fill": "phone",
+  "envelope.fill": "email",
+  "bubble.left.and.bubble.right": "chat",
+
   // Charts & Analytics
-  'chart.pie.fill': 'pie-chart',
-  'chart.bar.fill': 'bar-chart',
-  'graduationcap.fill': 'school',
-  
+  "chart.pie.fill": "pie-chart",
+  "chart.bar.fill": "bar-chart",
+  "graduationcap.fill": "school",
+
   // Status & Feedback
-  'checkmark.seal.fill': 'verified',
-  'tray.fill': 'inbox',
-  'xmark': 'close',
+  "checkmark.seal.fill": "verified",
+  "tray.fill": "inbox",
+  xmark: "close",
+  "star.fill": "star",
+  "exclamationmark.triangle.fill": "warning",
+  "exclamationmark.circle.fill": "error",
+  "info.circle.fill": "info",
 } as IconMapping;
 
 /**
@@ -81,5 +91,12 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  return (
+    <MaterialIcons
+      color={color}
+      size={size}
+      name={MAPPING[name]}
+      style={style}
+    />
+  );
 }

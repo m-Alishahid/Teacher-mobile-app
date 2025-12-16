@@ -145,7 +145,7 @@ export default function DashboardScreen() {
       title: "Assignments",
       icon: "doc.text.fill",
       color: colors.status.warning.main,
-      action: () => Alert.alert("Assignments", "Opening assignments..."),
+      action: () => router.push("/assignments"),
     },
   ];
 

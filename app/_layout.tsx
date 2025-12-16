@@ -1,12 +1,16 @@
-import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider as NavigationThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import "react-native-reanimated";
 
-import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: "(tabs)",
 };
 
 function RootLayoutNav() {
@@ -40,10 +44,12 @@ function RootLayoutNav() {
   };
 
   return (
-    <NavigationThemeProvider value={isDark ? customDarkTheme : customLightTheme}>
+    <NavigationThemeProvider
+      value={isDark ? customDarkTheme : customLightTheme}
+    >
       <Stack
         screenOptions={{
-          animation: 'slide_from_right',
+          animation: "slide_from_right",
           animationDuration: 700,
           headerStyle: {
             backgroundColor: colors.background.secondary,
@@ -54,44 +60,65 @@ function RootLayoutNav() {
           },
         }}
       >
-        <Stack.Screen 
-          name="(tabs)" 
-          options={{ 
+        <Stack.Screen
+          name="(tabs)"
+          options={{
             headerShown: false,
-            animation: 'fade',
-          }} 
+            animation: "fade",
+          }}
         />
-        <Stack.Screen 
-          name="index" 
-          options={{ 
+        <Stack.Screen
+          name="index"
+          options={{
             headerShown: false,
-            animation: 'none',
-          }} 
+            animation: "none",
+          }}
         />
-        <Stack.Screen 
-          name="create-assignment" 
-          options={{ 
-            title: 'Create Assignment',
+        <Stack.Screen
+          name="create-assignment"
+          options={{
+            title: "Create Assignment",
             headerShown: true,
-            animation: 'slide_from_bottom',
-            presentation: 'card',
-          }} 
+            animation: "slide_from_bottom",
+            presentation: "card",
+          }}
         />
-        <Stack.Screen 
-          name="student-details" 
-          options={{ 
-            title: 'Student Details',
+        <Stack.Screen
+          name="student-details"
+          options={{
+            title: "Student Details",
             headerShown: true,
-            animation: 'slide_from_right',
-          }} 
+            animation: "slide_from_right",
+          }}
         />
-        <Stack.Screen 
-          name="modal" 
-          options={{ 
-            presentation: 'modal', 
-            title: 'Modal',
-            animation: 'fade_from_bottom',
-          }} 
+        <Stack.Screen
+          name="assignments"
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="assignment-details"
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="submission-view"
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+          }}
+        />
+        <Stack.Screen
+          name="modal"
+          options={{
+            presentation: "modal",
+            title: "Modal",
+            animation: "fade_from_bottom",
+          }}
         />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />

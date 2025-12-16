@@ -294,37 +294,6 @@ export default function ClassesScreen() {
         onClose={() => setShowAssignmentForm(false)}
         selectedClass={selectedClass}
       />
-
-      {/* Floating Action Button for Create Assignment */}
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: colors.primary.main }]}
-        onPress={() => {
-          if (!selectedClass && filteredClasses.length > 0) {
-            // If no class is selected, show a picker
-            Alert.alert(
-              "📚 Select Class",
-              "Choose a class to create assignment for:",
-              [
-                ...filteredClasses.map((cls) => ({
-                  text: cls.className,
-                  onPress: () => {
-                    setSelectedClass(cls);
-                    setShowAssignmentForm(true);
-                  },
-                })),
-                { text: "Cancel", style: "cancel" as const },
-              ]
-            );
-          } else if (selectedClass) {
-            setShowAssignmentForm(true);
-          } else {
-            Alert.alert("No Classes", "Please add classes first");
-          }
-        }}
-        activeOpacity={0.8}
-      >
-        <IconSymbol name="plus" size={28} color={colors.primary.contrast} />
-      </TouchableOpacity>
     </View>
   );
 }

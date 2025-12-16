@@ -24,3 +24,12 @@ export {
     type RecentActivity
 } from './dashboard';
 
+// Assignments Data
+export {
+    allAssignments,
+    generateSubmissions,
+    getAssignmentStats,
+    type Assignment,
+    type StudentSubmission
+} from './assignments';
+
