@@ -15,11 +15,11 @@ import {
   LeaveApplication,
   LeaveApplicationModal,
 } from "@/components/profile/LeaveApplicationModal";
+import { CustomAlert } from "@/components/ui/CustomAlert";
 import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import {
   AttendanceRecord,
-  attendanceHistory as initialAttendanceHistory,
   currentAttendance as initialCurrentAttendance,
   teacherProfile,
 } from "@/data";
@@ -28,7 +28,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Modal,
   Platform,
   ScrollView,
@@ -150,6 +149,36 @@ export default function ProfileScreen() {
   const [attendanceHistory, setAttendanceHistory] = useState<
     AttendanceRecord[]
   >(initialAttendanceHistory);
+  // Alert State
+  const [alertConfig, setAlertConfig] = useState({
+    visible: false,
+    title: "",
+    message: "",
+    icon: "",
+    iconColor: "",
+    buttons: [] as any[],
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    icon: string,
+    iconColor: string,
+    buttons: any[] = [{ text: "OK", style: "default" }]
+  ) => {
+    setAlertConfig({
+      visible: true,
+      title,
+      message,
+      icon,
+      iconColor,
+      buttons,
+    });
+  };
+
+  const closeAlert = () => {
+    setAlertConfig((prev) => ({ ...prev, visible: false }));
+  };
 
   const isCheckedIn =
     currentAttendance.status === "checked-in" ||
@@ -171,88 +200,117 @@ export default function ProfileScreen() {
       });
 
       setCheckInLoading(false);
-      Alert.alert(
-        "✅ Checked In Successfully",
+      showAlert(
+        "✅ Checked In",
         `Welcome! You checked in at ${checkInTime}`,
-        [{ text: "OK" }]
+        "checkmark.circle.fill",
+        colors.status.success.main
       );
     }, 1000);
   };
 
   const handleCheckOut = () => {
-    Alert.alert("Check Out", "Are you sure you want to check out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Check Out",
-        style: "default",
-        onPress: () => {
-          setCheckInLoading(true);
-          setTimeout(() => {
-            const now = new Date();
-            const checkOutTime = now.toLocaleTimeString("en-US", {
-              hour: "2-digit",
-              minute: "2-digit",
-            });
+    showAlert(
+      "Confirm Check Out",
+      "Are you sure you want to check out for the day?",
+      "log-out.fill",
+      colors.status.warning.main,
+      [
+        { text: "Cancel", style: "cancel", onPress: closeAlert },
+        {
+          text: "Check Out",
+          style: "default",
+          onPress: () => {
+            closeAlert();
+            setCheckInLoading(true);
+            setTimeout(() => {
+              const now = new Date();
+              const checkOutTime = now.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              });
 
-            // Calculate working hours (simplified)
-            const workingHours = "8h 15m"; // In real app, calculate from check-in time
+              // Calculate working hours (simplified)
+              const workingHours = "8h 15m";
 
-            const completedRecord: AttendanceRecord = {
-              ...currentAttendance,
-              checkOutTime,
-              workingHours,
-              status: "present",
-            };
+              const completedRecord: AttendanceRecord = {
+                ...currentAttendance,
+                checkOutTime,
+                workingHours,
+                status: "present",
+              };
 
-            // Add to history
-            setAttendanceHistory([completedRecord, ...attendanceHistory]);
+              // Add to history
+              setAttendanceHistory([completedRecord, ...attendanceHistory]);
 
-            // Reset current attendance
-            setCurrentAttendance({
-              id: "att-" + new Date().toISOString(),
-              date: new Date().toLocaleDateString(),
-              checkInTime: null,
-              checkOutTime: null,
-              workingHours: null,
-              status: "absent",
-            });
+              // Update current state to show COMPLETED status instead of resetting
+              setCurrentAttendance(completedRecord);
 
-            setCheckInLoading(false);
-            Alert.alert(
-              "👋 Checked Out Successfully",
-              `You worked for ${workingHours} today. Have a great evening!`,
-              [{ text: "OK" }]
-            );
-          }, 1000);
+              setCheckInLoading(false);
+              setTimeout(() => {
+                showAlert(
+                  "👋 See You Tomorrow!",
+                  `You worked for ${workingHours} today. Have a great evening!`,
+                  "moon.stars.fill",
+                  colors.primary.main
+                );
+              }, 500);
+            }, 1000);
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Are you sure you want to end your session?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: () => {
-          router.replace("/");
+    showAlert(
+      "Logout",
+      "Are you sure you want to end your session?",
+      "power",
+      colors.status.error.main,
+      [
+        { text: "Cancel", style: "cancel", onPress: closeAlert },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: () => {
+            closeAlert();
+            router.replace("/");
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   const handleEditProfile = () => {
-    Alert.alert("Edit Profile", "Opening profile editor...");
+    showAlert(
+      "Edit Profile",
+      "Opening profile editor...",
+      "person.circle.fill",
+      colors.primary.main
+    );
   };
 
   const handleChangePassword = () => {
-    Alert.alert("Security", "Password change flow initiated.");
+    showAlert(
+      "Security",
+      "Password change flow initiated.",
+      "lock.fill",
+      colors.status.info.main
+    );
   };
 
   const handleLeaveApplicationSubmit = (application: LeaveApplication) => {
     setLeaveApplications([application, ...leaveApplications]);
     setShowLeaveApplication(false);
+    setTimeout(() => {
+      showAlert(
+        "Application Submitted",
+        "Your leave request has been sent for approval.",
+        "checkmark.circle.fill",
+        colors.status.success.main
+      );
+    }, 500);
   };
 
   return (
@@ -506,11 +564,13 @@ export default function ProfileScreen() {
               title="Leave History"
               subtitle={`${leaveApplications.length} application(s)`}
               onPress={() =>
-                Alert.alert(
+                showAlert(
                   "Leave History",
                   leaveApplications.length > 0
                     ? `You have ${leaveApplications.length} leave application(s)`
-                    : "No leave applications yet"
+                    : "No leave applications yet",
+                  "document-text-outline",
+                  colors.status.info.main
                 )
               }
               color={colors.status.info.main}
@@ -550,7 +610,12 @@ export default function ProfileScreen() {
               title="Language"
               subtitle="English (US)"
               onPress={() =>
-                Alert.alert("Language", "Language selection dialog")
+                showAlert(
+                  "Language",
+                  "Language selection dialog is coming soon.",
+                  "language-outline",
+                  colors.status.info.main
+                )
               }
               color={colors.status.info.main}
             />
@@ -572,7 +637,12 @@ export default function ProfileScreen() {
               icon="help-circle-outline"
               title="Help Center"
               onPress={() =>
-                Alert.alert("Help", "Navigating to Help Center...")
+                showAlert(
+                  "Help Center",
+                  "Redirection to Help Center is under construction.",
+                  "help-circle-outline",
+                  colors.primary.main
+                )
               }
             />
             <SettingItem
@@ -580,9 +650,11 @@ export default function ProfileScreen() {
               title="About App"
               subtitle="v1.0.0"
               onPress={() =>
-                Alert.alert(
+                showAlert(
                   "About",
-                  "Teacher Mobile App\nVersion 1.0.0\nBuild 2024.12.17"
+                  "Teacher Mobile App\nVersion 1.0.0\nBuild 2024.12.17",
+                  "information-circle-outline",
+                  colors.primary.main
                 )
               }
             />
@@ -658,6 +730,16 @@ export default function ProfileScreen() {
         visible={showLeaveApplication}
         onClose={() => setShowLeaveApplication(false)}
         onSubmit={handleLeaveApplicationSubmit}
+      />
+
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        iconColor={alertConfig.iconColor}
+        buttons={alertConfig.buttons}
+        onClose={closeAlert}
       />
     </>
   );

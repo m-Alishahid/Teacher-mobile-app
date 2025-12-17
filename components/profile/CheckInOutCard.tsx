@@ -2,21 +2,167 @@
  * CheckInOutCard Component
  *
  * Professional check-in/check-out card with gradient design
- * Shows current status and allows teachers to check in/out
+ * Features a modern "Swipe to Confirm" interaction
  */
 
 import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  PanResponder,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
+
+interface SwipeButtonProps {
+  onSwipeSuccess: () => void;
+  text: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  backgroundColor: string;
+  loading?: boolean;
+}
+
+const SwipeButton: React.FC<SwipeButtonProps> = ({
+  onSwipeSuccess,
+  text,
+  icon,
+  color,
+  backgroundColor,
+  loading = false,
+}) => {
+  const [swiped, setSwiped] = useState(false);
+  const translateX = useRef(new Animated.Value(0)).current;
+  const buttonWidth = useRef(0);
+  const contentWidth = useRef(0); // To track the thumb width
+
+  // Padding inside the button container
+  const PADDING = 4;
+
+  const reset = () => {
+    setSwiped(false);
+    Animated.spring(translateX, {
+      toValue: 0,
+      useNativeDriver: false,
+      bounciness: 10,
+    }).start();
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => !loading && !swiped,
+      onMoveShouldSetPanResponder: () => !loading && !swiped,
+      onPanResponderMove: (_, gestureState) => {
+        if (loading || swiped) return;
+
+        // Calculate max scrollable distance
+        const maxScroll = buttonWidth.current - 60; // 60 is approx thumb width
+
+        // Clamp value between 0 and maxScroll
+        const newValue = Math.max(0, Math.min(maxScroll, gestureState.dx));
+        translateX.setValue(newValue);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (loading || swiped) return;
+
+        const maxScroll = buttonWidth.current - 60;
+
+        // If swiped more than 70% of the width
+        if (gestureState.dx > maxScroll * 0.7) {
+          setSwiped(true);
+          Animated.spring(translateX, {
+            toValue: maxScroll,
+            useNativeDriver: false,
+            bounciness: 0,
+          }).start(() => {
+            onSwipeSuccess();
+            // Reset after a delay if action failed or completed (handled by parent props mainly)
+            // But here we rely on parent to update state or we manually reset if needed
+            setTimeout(reset, 2000);
+          });
+        } else {
+          // Spring back
+          reset();
+        }
+      },
+    })
+  ).current;
+
+  // Text Opacity Animation based on drag
+  const textOpacity = translateX.interpolate({
+    inputRange: [0, 50],
+    outputRange: [1, 0],
+    extrapolate: "clamp",
+  });
+
+  return (
+    <View
+      style={[styles.swipeContainer, { backgroundColor }]}
+      onLayout={(e) => {
+        buttonWidth.current = e.nativeEvent.layout.width;
+      }}
+    >
+      <Animated.Text
+        style={[styles.swipeText, { color, opacity: textOpacity }]}
+      >
+        {text}
+      </Animated.Text>
+
+      <Animated.View
+        style={[
+          styles.swipeThumb,
+          {
+            transform: [{ translateX }],
+          },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        {loading ? (
+          <ActivityIndicator color={color} size="small" />
+        ) : (
+          <Ionicons name={icon} size={24} color={color} />
+        )}
+      </Animated.View>
+
+      {/* Arrow Indicator Overlay (fades in when dragging starts) */}
+      {!loading && !swiped && (
+        <Animated.View
+          style={[
+            styles.chevronContainer,
+            {
+              opacity: textOpacity,
+              right: 16,
+            },
+          ]}
+        >
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={color}
+            style={{ opacity: 0.5 }}
+          />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={color}
+            style={{ marginLeft: -12, opacity: 0.8 }}
+          />
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color={color}
+            style={{ marginLeft: -12 }}
+          />
+        </Animated.View>
+      )}
+    </View>
+  );
+};
 
 interface CheckInOutCardProps {
   isCheckedIn: boolean;
@@ -118,40 +264,18 @@ export const CheckInOutCard: React.FC<CheckInOutCardProps> = ({
         </View>
       </View>
 
-      {/* Action Button */}
+      {/* Swipe Action Button */}
       {!checkOutTime && (
-        <TouchableOpacity
-          style={[
-            styles.actionButton,
-            {
-              backgroundColor: colors.primary.contrast,
-              opacity: loading ? 0.6 : 1,
-            },
-          ]}
-          onPress={isCheckedIn ? onCheckOut : onCheckIn}
-          disabled={loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.primary.main} />
-          ) : (
-            <>
-              <Ionicons
-                name={isCheckedIn ? "log-out-outline" : "log-in-outline"}
-                size={20}
-                color={colors.primary.main}
-              />
-              <Text
-                style={[
-                  styles.actionButtonText,
-                  { color: colors.primary.main },
-                ]}
-              >
-                {isCheckedIn ? "Check Out Now" : "Check In Now"}
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <View style={styles.actionContainer}>
+          <SwipeButton
+            text={isCheckedIn ? "Swipe to Check Out" : "Swipe to Check In"}
+            icon={isCheckedIn ? "log-out" : "log-in"}
+            onSwipeSuccess={isCheckedIn ? onCheckOut : onCheckIn}
+            color={isCheckedIn ? colors.status.error.main : colors.primary.main}
+            backgroundColor={colors.primary.contrast}
+            loading={loading}
+          />
+        </View>
       )}
     </LinearGradient>
   );
@@ -212,17 +336,41 @@ const styles = StyleSheet.create({
     height: 40,
     marginHorizontal: Spacing.md,
   },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    gap: Spacing.sm,
+  actionContainer: {
     marginTop: Spacing.sm,
   },
-  actionButtonText: {
+  // Swipe Button Styles
+  swipeContainer: {
+    height: 56,
+    borderRadius: BorderRadius.full,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    overflow: "hidden",
+  },
+  swipeText: {
     fontSize: FontSizes.base,
     fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  swipeThumb: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#fff",
+    position: "absolute",
+    left: 3,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  chevronContainer: {
+    position: "absolute",
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
