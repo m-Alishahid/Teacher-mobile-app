@@ -20,6 +20,7 @@ import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import {
   AttendanceRecord,
+  attendanceHistory as initialAttendanceHistory,
   currentAttendance as initialCurrentAttendance,
   teacherProfile,
 } from "@/data";

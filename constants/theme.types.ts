@@ -77,6 +77,7 @@ export interface AppColorsType {
 export interface FontSizesType {
   xs: number;
   sm: number;
+  md: number;
   base: number;
   lg: number;
   xl: number;

@@ -11,10 +11,10 @@
 
 import { Platform } from 'react-native';
 import type {
-  AppColorsType,
-  BorderRadiusType,
-  FontSizesType,
-  SpacingType
+    AppColorsType,
+    BorderRadiusType,
+    FontSizesType,
+    SpacingType
 } from './theme.types';
 
 /**
@@ -254,6 +254,7 @@ export const Fonts = Platform.select({
 export const FontSizes: FontSizesType = {
   xs: 12,
   sm: 14,
+  md: 15,
   base: 16,
   lg: 18,
   xl: 20,
