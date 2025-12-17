@@ -18,5 +18,6 @@ export interface Student {
   id: string;
   name: string;
   rollNumber: string;
-  status: 'present' | 'late' | 'absent' | null;
+  status: 'present' | 'late' | 'absent' | 'scanned' | null;
+  scannedAt?: Date;
 }

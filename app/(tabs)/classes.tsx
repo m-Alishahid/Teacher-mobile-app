@@ -71,7 +71,7 @@ export default function ClassesScreen() {
 
   const markAttendance = (
     studentId: string,
-    status: "present" | "late" | "absent"
+    status: "present" | "late" | "absent" | "scanned"
   ) => {
     setStudents((prev) =>
       prev.map((student) =>
@@ -89,7 +89,7 @@ export default function ClassesScreen() {
   const submitAttendance = () => {
     const unmarked = students.filter((s) => s.status === null).length;
 
-    if (unmarked > 0) {
+    if (0 < unmarked) {
       Alert.alert(
         "Incomplete Attendance",
         `${unmarked} student(s) not marked. Continue anyway?`,

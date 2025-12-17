@@ -1,19 +1,23 @@
 /**
- * Attendance Tab Screen
- * 
- * Optimized Features:
- * - Automatically detects and shows current running class
- * - Smart class selection based on current time
- * - Quick attendance marking
- * - Real-time stats
+ * QR-Based Attendance Screen
+ *
+ * Features:
+ * - Auto-detects current running class
+ * - QR scan only (no manual marking)
+ * - Real-time attendance stats
+ * - Premium modern UI
  */
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { AppColors, BorderRadius, FontSizes, Spacing } from '@/constants/theme';
-import { useTheme } from '@/context/ThemeContext';
-import React, { useEffect, useState } from 'react';
+import QRScanner from "@/components/attendance/QRScanner";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import { Student } from "@/types/classes";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
+  Animated,
   FlatList,
   Modal,
   ScrollView,
@@ -21,17 +25,7 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from 'react-native';
-import QRScanner from '@/components/attendance/QRScanner';
-
-type AttendanceStatus = 'present' | 'absent' | 'late' | null;
-
-interface Student {
-  id: string;
-  name: string;
-  rollNumber: string;
-  status: AttendanceStatus;
-}
+} from "react-native";
 
 interface ClassSchedule {
   id: string;
@@ -40,72 +34,91 @@ interface ClassSchedule {
   startTime: string;
   endTime: string;
   room: string;
-  dayOfWeek: number; // 0 = Sunday, 1 = Monday, etc.
+  dayOfWeek: number;
 }
 
 export default function AttendanceScreen() {
   const { colors, isDark } = useTheme();
   const [currentClass, setCurrentClass] = useState<ClassSchedule | null>(null);
-  const [selectedClass, setSelectedClass] = useState<ClassSchedule | null>(null);
+  const [selectedClass, setSelectedClass] = useState<ClassSchedule | null>(
+    null
+  );
   const [showClassPicker, setShowClassPicker] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [students, setStudents] = useState<Student[]>([]);
+  const [pulseAnim] = useState(new Animated.Value(1));
 
   // Mock class schedule
   const classSchedule: ClassSchedule[] = [
     {
-      id: '1',
-      className: 'Grade 10 - Section A',
-      subject: 'Mathematics',
-      startTime: '09:00',
-      endTime: '10:00',
-      room: 'Room 204',
-      dayOfWeek: 1, // Monday
+      id: "1",
+      className: "Grade 10 - Section A",
+      subject: "Mathematics",
+      startTime: "09:00",
+      endTime: "10:00",
+      room: "Room 204",
+      dayOfWeek: 1,
     },
     {
-      id: '2',
-      className: 'Grade 11 - Section A',
-      subject: 'Physics',
-      startTime: '10:30',
-      endTime: '11:30',
-      room: 'Lab 305',
-      dayOfWeek: 1, // Monday
+      id: "2",
+      className: "Grade 11 - Section A",
+      subject: "Physics",
+      startTime: "10:30",
+      endTime: "11:30",
+      room: "Lab 305",
+      dayOfWeek: 1,
     },
     {
-      id: '3',
-      className: 'Grade 12 - Section A',
-      subject: 'Chemistry',
-      startTime: '13:00',
-      endTime: '14:00',
-      room: 'Lab 101',
-      dayOfWeek: 1, // Monday
+      id: "3",
+      className: "Grade 12 - Section A",
+      subject: "Chemistry",
+      startTime: "13:00",
+      endTime: "14:00",
+      room: "Lab 101",
+      dayOfWeek: 1,
     },
     {
-      id: '4',
-      className: 'Grade 10 - Section B',
-      subject: 'Mathematics',
-      startTime: '14:30',
-      endTime: '15:30',
-      room: 'Room 204',
-      dayOfWeek: 1, // Monday
+      id: "4",
+      className: "Grade 10 - Section B",
+      subject: "Mathematics",
+      startTime: "14:30",
+      endTime: "15:30",
+      room: "Room 204",
+      dayOfWeek: 1,
     },
   ];
 
   // Generate mock students
   const generateStudents = (count: number = 32): Student[] => {
     const names = [
-      'Ahmed Ali', 'Fatima Hassan', 'Hassan Ahmed', 'Ayesha Malik',
-      'Usman Tariq', 'Zainab Hassan', 'Ali Raza', 'Maryam Siddiqui',
-      'Omar Farooq', 'Sara Khan', 'Ibrahim Ali', 'Aisha Ahmed',
-      'Bilal Hassan', 'Hira Malik', 'Hamza Tariq', 'Zara Ali',
-      'Faisal Ahmed', 'Noor Hassan', 'Kamran Ali', 'Sana Malik',
+      "Ahmed Ali",
+      "Fatima Hassan",
+      "Hassan Ahmed",
+      "Ayesha Malik",
+      "Usman Tariq",
+      "Zainab Hassan",
+      "Ali Raza",
+      "Maryam Siddiqui",
+      "Omar Farooq",
+      "Sara Khan",
+      "Ibrahim Ali",
+      "Aisha Ahmed",
+      "Bilal Hassan",
+      "Hira Malik",
+      "Hamza Tariq",
+      "Zara Ali",
+      "Faisal Ahmed",
+      "Noor Hassan",
+      "Kamran Ali",
+      "Sana Malik",
     ];
-    
+
     return Array.from({ length: count }, (_, i) => ({
       id: `${i + 1}`,
-      name: names[i % names.length] + (i >= names.length ? ` ${Math.floor(i / names.length) + 1}` : ''),
-      rollNumber: String(i + 1).padStart(3, '0'),
+      name:
+        names[i % names.length] +
+        (i >= names.length ? ` ${Math.floor(i / names.length) + 1}` : ""),
+      rollNumber: String(i + 1).padStart(3, "0"),
       status: null,
     }));
   };
@@ -114,27 +127,44 @@ export default function AttendanceScreen() {
   const getCurrentClass = (): ClassSchedule | null => {
     const now = new Date();
     const currentDay = now.getDay();
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const currentTime = `${String(now.getHours()).padStart(2, "0")}:${String(
+      now.getMinutes()
+    ).padStart(2, "0")}`;
 
-    // Find class that matches current day and time
-    const runningClass = classSchedule.find(cls => {
+    const runningClass = classSchedule.find((cls) => {
       if (cls.dayOfWeek !== currentDay) return false;
       return currentTime >= cls.startTime && currentTime <= cls.endTime;
     });
 
-    // If no class is running, find the next class
     if (!runningClass) {
-      const upcomingClass = classSchedule.find(cls => {
+      const upcomingClass = classSchedule.find((cls) => {
         if (cls.dayOfWeek !== currentDay) return false;
         return currentTime < cls.startTime;
       });
-      return upcomingClass || classSchedule[0]; // Default to first class
+      return upcomingClass || classSchedule[0];
     }
 
     return runningClass;
   };
 
-  // Initialize with current class
+  // Pulse animation for scan button
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
   useEffect(() => {
     const current = getCurrentClass();
     setCurrentClass(current);
@@ -143,50 +173,44 @@ export default function AttendanceScreen() {
   }, []);
 
   const getInitials = (name: string) => {
-    const parts = name.split(' ');
+    const parts = name.split(" ");
     if (parts.length >= 2) {
       return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     return name.substring(0, 2).toUpperCase();
   };
 
-  const markAttendance = (studentId: string, status: AttendanceStatus) => {
-    setStudents(prev =>
-      prev.map(student =>
-        student.id === studentId ? { ...student, status } : student
+  const handleStudentScan = (studentId: string) => {
+    setStudents((prev) =>
+      prev.map((student) =>
+        student.id === studentId
+          ? { ...student, status: "scanned" as const, scannedAt: new Date() }
+          : student
       )
     );
   };
 
-  const markAllPresent = () => {
-    setStudents(prev =>
-      prev.map(student => ({ ...student, status: 'present' as const }))
-    );
-  };
-
   const getStatusCounts = () => {
-    const present = students.filter(s => s.status === 'present').length;
-    const late = students.filter(s => s.status === 'late').length;
-    const absent = students.filter(s => s.status === 'absent').length;
-    const unmarked = students.filter(s => s.status === null).length;
-    return { present, late, absent, unmarked };
+    const scanned = students.filter((s) => s.status === "scanned").length;
+    const unscanned = students.filter((s) => s.status === null).length;
+    return { scanned, unscanned };
   };
 
   const submitAttendance = () => {
     const counts = getStatusCounts();
-    
-    if (counts.unmarked > 0) {
+
+    if (counts.unscanned > 0) {
       Alert.alert(
-        'Incomplete Attendance',
-        `${counts.unmarked} student(s) not marked. Continue anyway?`,
+        "Incomplete Attendance",
+        `${counts.unscanned} student(s) have not scanned yet.\n\nContinue anyway? Unmarked students will be marked absent.`,
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: "Cancel", style: "cancel" },
           {
-            text: 'Submit',
+            text: "Submit",
             onPress: () => {
               Alert.alert(
-                '✅ Success',
-                `Attendance submitted for ${selectedClass?.className}!\n\nPresent: ${counts.present}\nLate: ${counts.late}\nAbsent: ${counts.absent}`
+                "✅ Success",
+                `Attendance submitted for ${selectedClass?.className}!\n\nPresent: ${counts.scanned}\nAbsent: ${counts.unscanned}`
               );
             },
           },
@@ -194,223 +218,387 @@ export default function AttendanceScreen() {
       );
     } else {
       Alert.alert(
-        '✅ Success',
-        `Attendance submitted for ${selectedClass?.className}!\n\nPresent: ${counts.present}\nLate: ${counts.late}\nAbsent: ${counts.absent}`
+        "✅ Perfect Attendance!",
+        `All students scanned for ${selectedClass?.className}!\n\nTotal Present: ${counts.scanned}`
       );
     }
   };
 
-  const handleQRScan = () => {
-    setShowQRScanner(true);
-  };
-
-  const handleStudentScan = (studentId: string) => {
-    // Automatically mark student as present when scanned
-    markAttendance(studentId, 'present');
-  };
-
   const counts = getStatusCounts();
   const isCurrentClass = currentClass?.id === selectedClass?.id;
+  const completionPercent =
+    students.length > 0
+      ? Math.round((counts.scanned / students.length) * 100)
+      : 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background.primary }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: colors.primary.main }]}>
+    <View
+      style={[styles.container, { backgroundColor: colors.background.primary }]}
+    >
+      {/* Header with Gradient */}
+      <LinearGradient
+        colors={[
+          colors.primary.main,
+          colors.primary.dark || colors.primary.main,
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.header}
+      >
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.headerTitle, { color: colors.primary.contrast }]}>Take Attendance</Text>
+            <Text
+              style={[styles.headerTitle, { color: colors.primary.contrast }]}
+            >
+              QR Attendance
+            </Text>
             {selectedClass && (
-              <Text style={[styles.headerSubtitle, { color: colors.primary.contrast }]}>{selectedClass.className}</Text>
+              <Text
+                style={[
+                  styles.headerSubtitle,
+                  { color: colors.primary.contrast },
+                ]}
+              >
+                {selectedClass.className}
+              </Text>
             )}
           </View>
-          <TouchableOpacity
-            style={styles.qrButton}
-            onPress={handleQRScan}
-            activeOpacity={0.7}
-          >
-            <IconSymbol name="qrcode" size={24} color={colors.primary.contrast} />
-          </TouchableOpacity>
         </View>
 
-        {/* Current Class Indicator */}
+        {/* Current Class Banner */}
         {isCurrentClass && currentClass && (
-          <View style={styles.currentClassBanner}>
-            <View style={styles.currentClassDot} />
-            <Text style={[styles.currentClassText, { color: colors.primary.contrast }]}>
-              🔴 LIVE NOW: {currentClass.startTime} - {currentClass.endTime}
+          <View
+            style={[
+              styles.liveBanner,
+              { backgroundColor: "rgba(255, 255, 255, 0.15)" },
+            ]}
+          >
+            <View style={styles.liveDot} />
+            <Text style={[styles.liveText, { color: colors.primary.contrast }]}>
+              🔴 LIVE: {currentClass.startTime} - {currentClass.endTime}
             </Text>
           </View>
         )}
 
         {/* Class Selector */}
         <TouchableOpacity
-          style={[styles.classSelector, { backgroundColor: colors.ui.card }]}
+          style={[
+            styles.classSelector,
+            { backgroundColor: "rgba(255, 255, 255, 0.2)" },
+          ]}
           onPress={() => setShowClassPicker(true)}
           activeOpacity={0.7}
         >
           <View style={styles.classSelectorLeft}>
-            <IconSymbol name="book.fill" size={20} color={colors.primary.main} />
+            <IconSymbol
+              name="book.fill"
+              size={20}
+              color={colors.primary.contrast}
+            />
             <View style={styles.classSelectorText}>
-              <Text style={[styles.classSelectorTitle, { color: colors.text.primary }]}>
-                {selectedClass?.subject || 'Select Class'}
+              <Text
+                style={[
+                  styles.classSelectorTitle,
+                  { color: colors.primary.contrast },
+                ]}
+              >
+                {selectedClass?.subject || "Select Class"}
               </Text>
-              <Text style={[styles.classSelectorSubtitle, { color: colors.text.secondary }]}>
+              <Text
+                style={[
+                  styles.classSelectorSubtitle,
+                  { color: colors.primary.contrast },
+                ]}
+              >
                 {selectedClass?.room} • {selectedClass?.startTime}
               </Text>
             </View>
           </View>
-          <IconSymbol name="chevron.down" size={20} color={colors.text.secondary} />
+          <IconSymbol
+            name="chevron.down"
+            size={20}
+            color={colors.primary.contrast}
+          />
         </TouchableOpacity>
+      </LinearGradient>
+
+      {/* Completion Progress */}
+      <View
+        style={[
+          styles.progressSection,
+          { backgroundColor: colors.background.secondary },
+        ]}
+      >
+        <View style={styles.progressHeader}>
+          <Text style={[styles.progressTitle, { color: colors.text.primary }]}>
+            Attendance Progress
+          </Text>
+          <Text
+            style={[styles.progressPercent, { color: colors.primary.main }]}
+          >
+            {completionPercent}%
+          </Text>
+        </View>
+        <View
+          style={[styles.progressBarBg, { backgroundColor: colors.ui.border }]}
+        >
+          <Animated.View
+            style={[
+              styles.progressBarFill,
+              {
+                backgroundColor:
+                  completionPercent === 100
+                    ? colors.status.success.main
+                    : colors.primary.main,
+                width: `${completionPercent}%`,
+              },
+            ]}
+          />
+        </View>
+        <Text
+          style={[styles.progressSubtext, { color: colors.text.secondary }]}
+        >
+          {counts.scanned} of {students.length} students scanned
+        </Text>
       </View>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <View style={styles.statsContainer}>
-        <View style={[styles.statBox, { backgroundColor: colors.status.success.background }]}>
-          <Text style={[styles.statNumber, { color: colors.status.success.main }]}>
-            {counts.present}
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: colors.status.success.background },
+          ]}
+        >
+          <IconSymbol
+            name="checkmark.circle.fill"
+            size={32}
+            color={colors.status.success.main}
+          />
+          <Text
+            style={[styles.statNumber, { color: colors.status.success.main }]}
+          >
+            {counts.scanned}
           </Text>
-          <Text style={[styles.statLabel, { color: colors.status.success.text }]}>
-            Present
-          </Text>
-        </View>
-        <View style={[styles.statBox, { backgroundColor: colors.status.warning.background }]}>
-          <Text style={[styles.statNumber, { color: colors.status.warning.main }]}>
-            {counts.late}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.status.warning.text }]}>
-            Late
-          </Text>
-        </View>
-        <View style={[styles.statBox, { backgroundColor: colors.status.error.background }]}>
-          <Text style={[styles.statNumber, { color: colors.status.error.main }]}>
-            {counts.absent}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.status.error.text }]}>
-            Absent
+          <Text
+            style={[styles.statLabel, { color: colors.status.success.text }]}
+          >
+            Scanned
           </Text>
         </View>
-        <View style={[styles.statBox, { backgroundColor: colors.background.secondary }]}>
-          <Text style={[styles.statNumber, { color: colors.text.secondary }]}>
-            {counts.unmarked}
+
+        <View
+          style={[
+            styles.statCard,
+            { backgroundColor: colors.background.secondary },
+          ]}
+        >
+          <IconSymbol
+            name="clock.fill"
+            size={32}
+            color={colors.text.secondary}
+          />
+          <Text style={[styles.statNumber, { color: colors.text.primary }]}>
+            {counts.unscanned}
           </Text>
           <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
-            Unmarked
+            Pending
           </Text>
         </View>
       </View>
 
-      {/* Mark All Button */}
-      <View style={styles.markAllContainer}>
+      {/* Scan Button */}
+      <View style={styles.scanSection}>
         <TouchableOpacity
-          style={[styles.markAllButton, { backgroundColor: colors.status.success.main }]}
-          onPress={markAllPresent}
-          activeOpacity={0.7}
+          onPress={() => setShowQRScanner(true)}
+          activeOpacity={0.8}
         >
-          <IconSymbol name="checkmark.circle.fill" size={20} color={colors.primary.contrast} />
-          <Text style={[styles.markAllButtonText, { color: colors.primary.contrast }]}>Mark All Present</Text>
+          <Animated.View
+            style={[
+              styles.scanButton,
+              {
+                backgroundColor: colors.primary.main,
+                transform: [{ scale: pulseAnim }],
+              },
+            ]}
+          >
+            <LinearGradient
+              colors={[
+                colors.primary.main,
+                colors.primary.dark || colors.primary.main,
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.scanButtonGradient}
+            >
+              <IconSymbol
+                name="qrcode"
+                size={48}
+                color={colors.primary.contrast}
+              />
+              <Text
+                style={[
+                  styles.scanButtonText,
+                  { color: colors.primary.contrast },
+                ]}
+              >
+                Start Scanning
+              </Text>
+              <Text
+                style={[
+                  styles.scanButtonSubtext,
+                  { color: colors.primary.contrast },
+                ]}
+              >
+                Tap to open QR scanner
+              </Text>
+            </LinearGradient>
+          </Animated.View>
         </TouchableOpacity>
       </View>
 
       {/* Student List */}
+      <View style={styles.listHeader}>
+        <Text style={[styles.listTitle, { color: colors.text.primary }]}>
+          Student List
+        </Text>
+        <View
+          style={[
+            styles.legendItem,
+            { backgroundColor: colors.background.secondary },
+          ]}
+        >
+          <View
+            style={[
+              styles.legendDot,
+              { backgroundColor: colors.status.success.main },
+            ]}
+          />
+          <Text style={[styles.legendText, { color: colors.text.secondary }]}>
+            Scanned
+          </Text>
+        </View>
+      </View>
+
       <FlatList
         data={students}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.studentList}
         renderItem={({ item }) => (
-          <View style={[styles.studentCard, { backgroundColor: colors.ui.card, borderColor: colors.ui.border }]}>
+          <View
+            style={[
+              styles.studentCard,
+              {
+                backgroundColor: colors.ui.card,
+                borderColor:
+                  item.status === "scanned"
+                    ? colors.status.success.main
+                    : colors.ui.border,
+                borderWidth: item.status === "scanned" ? 2 : 1,
+              },
+            ]}
+          >
             <View style={styles.studentInfo}>
-              <View style={[styles.studentAvatar, { backgroundColor: colors.primary.main }]}>
-                <Text style={[styles.avatarText, { color: colors.primary.contrast }]}>{getInitials(item.name)}</Text>
+              <View
+                style={[
+                  styles.studentAvatar,
+                  {
+                    backgroundColor:
+                      item.status === "scanned"
+                        ? colors.status.success.main
+                        : colors.primary.main,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.avatarText,
+                    { color: colors.primary.contrast },
+                  ]}
+                >
+                  {getInitials(item.name)}
+                </Text>
               </View>
               <View style={styles.studentDetails}>
-                <Text style={[styles.studentName, { color: colors.text.primary }]}>{item.name}</Text>
-                <Text style={[styles.studentRoll, { color: colors.text.secondary }]}>Roll No: {item.rollNumber}</Text>
+                <Text
+                  style={[styles.studentName, { color: colors.text.primary }]}
+                >
+                  {item.name}
+                </Text>
+                <Text
+                  style={[styles.studentRoll, { color: colors.text.secondary }]}
+                >
+                  Roll No: {item.rollNumber}
+                </Text>
+                {item.scannedAt && (
+                  <Text
+                    style={[
+                      styles.scannedTime,
+                      { color: colors.status.success.main },
+                    ]}
+                  >
+                    ✓ Scanned at{" "}
+                    {item.scannedAt.toLocaleTimeString("en-US", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Text>
+                )}
               </View>
             </View>
 
-            <View style={styles.radioGroup}>
-              {/* Present */}
-              <TouchableOpacity
-                style={styles.radioButton}
-                onPress={() => markAttendance(item.id, 'present')}
-                activeOpacity={0.7}
-              >
-                <View style={[
-                  styles.radioOuter,
-                  { borderColor: colors.status.success.main },
-                  item.status === 'present' && { backgroundColor: colors.status.success.main },
-                ]}>
-                  {item.status === 'present' && (
-                    <View style={[styles.radioInner, { backgroundColor: colors.primary.contrast }]} />
-                  )}
-                </View>
-                <Text style={[
-                  styles.radioLabel,
-                  { color: item.status === 'present' ? colors.status.success.main : colors.text.secondary, fontWeight: item.status === 'present' ? '700' : '400' },
-                ]}>
-                  P
-                </Text>
-              </TouchableOpacity>
-
-              {/* Late */}
-              <TouchableOpacity
-                style={styles.radioButton}
-                onPress={() => markAttendance(item.id, 'late')}
-                activeOpacity={0.7}
-              >
-                <View style={[
-                  styles.radioOuter,
-                  { borderColor: colors.status.warning.main },
-                  item.status === 'late' && { backgroundColor: colors.status.warning.main },
-                ]}>
-                  {item.status === 'late' && (
-                    <View style={[styles.radioInner, { backgroundColor: colors.primary.contrast }]} />
-                  )}
-                </View>
-                <Text style={[
-                  styles.radioLabel,
-                  { color: item.status === 'late' ? colors.status.warning.main : colors.text.secondary, fontWeight: item.status === 'late' ? '700' : '400' },
-                ]}>
-                  L
-                </Text>
-              </TouchableOpacity>
-
-              {/* Absent */}
-              <TouchableOpacity
-                style={styles.radioButton}
-                onPress={() => markAttendance(item.id, 'absent')}
-                activeOpacity={0.7}
-              >
-                <View style={[
-                  styles.radioOuter,
-                  { borderColor: colors.status.error.main },
-                  item.status === 'absent' && { backgroundColor: colors.status.error.main },
-                ]}>
-                  {item.status === 'absent' && (
-                    <View style={[styles.radioInner, { backgroundColor: colors.primary.contrast }]} />
-                  )}
-                </View>
-                <Text style={[
-                  styles.radioLabel,
-                  { color: item.status === 'absent' ? colors.status.error.main : colors.text.secondary, fontWeight: item.status === 'absent' ? '700' : '400' },
-                ]}>
-                  A
-                </Text>
-              </TouchableOpacity>
-            </View>
+            {item.status === "scanned" && (
+              <IconSymbol
+                name="checkmark.seal.fill"
+                size={28}
+                color={colors.status.success.main}
+              />
+            )}
           </View>
         )}
       />
 
       {/* Submit Button */}
-      <View style={[styles.submitContainer, { backgroundColor: colors.background.primary, borderTopColor: colors.ui.border }]}>
+      <View
+        style={[
+          styles.submitContainer,
+          {
+            backgroundColor: colors.background.primary,
+            borderTopColor: colors.ui.border,
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.submitButton, { backgroundColor: colors.primary.main }]}
+          style={[
+            styles.submitButton,
+            { backgroundColor: colors.primary.main },
+          ]}
           onPress={submitAttendance}
           activeOpacity={0.8}
         >
-          <IconSymbol name="checkmark.seal.fill" size={20} color={colors.primary.contrast} />
-          <Text style={[styles.submitButtonText, { color: colors.primary.contrast }]}>Submit Attendance</Text>
+          <LinearGradient
+            colors={[
+              colors.primary.main,
+              colors.primary.dark || colors.primary.main,
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.submitButtonGradient}
+          >
+            <IconSymbol
+              name="checkmark.seal.fill"
+              size={20}
+              color={colors.primary.contrast}
+            />
+            <Text
+              style={[
+                styles.submitButtonText,
+                { color: colors.primary.contrast },
+              ]}
+            >
+              Submit Attendance
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
@@ -421,15 +609,32 @@ export default function AttendanceScreen() {
         animationType="slide"
         onRequestClose={() => setShowClassPicker(false)}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: colors.ui.overlay }]}>
-          <View style={[styles.pickerModal, { backgroundColor: colors.ui.card }]}>
-            <View style={[styles.pickerHeader, { borderBottomColor: colors.ui.border }]}>
-              <Text style={[styles.pickerTitle, { color: colors.text.primary }]}>Select Class</Text>
+        <View
+          style={[styles.modalOverlay, { backgroundColor: colors.ui.overlay }]}
+        >
+          <View
+            style={[styles.pickerModal, { backgroundColor: colors.ui.card }]}
+          >
+            <View
+              style={[
+                styles.pickerHeader,
+                { borderBottomColor: colors.ui.border },
+              ]}
+            >
+              <Text
+                style={[styles.pickerTitle, { color: colors.text.primary }]}
+              >
+                Select Class
+              </Text>
               <TouchableOpacity
                 onPress={() => setShowClassPicker(false)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                <IconSymbol name="xmark" size={24} color={colors.text.secondary} />
+                <IconSymbol
+                  name="xmark"
+                  size={24}
+                  color={colors.text.secondary}
+                />
               </TouchableOpacity>
             </View>
 
@@ -444,31 +649,74 @@ export default function AttendanceScreen() {
                     style={[
                       styles.pickerItem,
                       { borderBottomColor: colors.ui.divider },
-                      isSelected && { backgroundColor: isDark ? colors.background.tertiary : colors.background.secondary },
+                      isSelected && {
+                        backgroundColor: colors.background.secondary,
+                      },
                     ]}
                     onPress={() => {
                       setSelectedClass(cls);
                       setShowClassPicker(false);
+                      setStudents(generateStudents(32));
                     }}
                     activeOpacity={0.7}
                   >
                     <View style={styles.pickerItemLeft}>
                       <View style={styles.pickerItemHeader}>
-                        <Text style={[styles.pickerItemTitle, { color: colors.text.primary }]}>{cls.className}</Text>
+                        <Text
+                          style={[
+                            styles.pickerItemTitle,
+                            { color: colors.text.primary },
+                          ]}
+                        >
+                          {cls.className}
+                        </Text>
                         {isCurrent && (
-                          <View style={styles.liveBadge}>
-                            <View style={[styles.liveDot, { backgroundColor: colors.primary.contrast }]} />
-                            <Text style={styles.liveText}>LIVE</Text>
+                          <View
+                            style={[
+                              styles.liveChip,
+                              { backgroundColor: colors.status.error.main },
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.liveChipDot,
+                                { backgroundColor: colors.primary.contrast },
+                              ]}
+                            />
+                            <Text
+                              style={[
+                                styles.liveChipText,
+                                { color: colors.primary.contrast },
+                              ]}
+                            >
+                              LIVE
+                            </Text>
                           </View>
                         )}
                       </View>
-                      <Text style={[styles.pickerItemSubject, { color: colors.text.secondary }]}>{cls.subject}</Text>
-                      <Text style={[styles.pickerItemTime, { color: colors.text.tertiary }]}>
+                      <Text
+                        style={[
+                          styles.pickerItemSubject,
+                          { color: colors.text.secondary },
+                        ]}
+                      >
+                        {cls.subject}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.pickerItemTime,
+                          { color: colors.text.tertiary },
+                        ]}
+                      >
                         {cls.room} • {cls.startTime} - {cls.endTime}
                       </Text>
                     </View>
                     {isSelected && (
-                      <IconSymbol name="checkmark" size={24} color={colors.primary.main} />
+                      <IconSymbol
+                        name="checkmark.circle.fill"
+                        size={24}
+                        color={colors.primary.main}
+                      />
                     )}
                   </TouchableOpacity>
                 );
@@ -492,80 +740,65 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: AppColors.background.primary,
   },
 
   // Header
   header: {
-    backgroundColor: AppColors.primary.main,
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.xl,
     paddingBottom: Spacing.md,
   },
   headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
   },
   headerLeft: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: FontSizes.xl,
-    fontWeight: '700',
-    color: AppColors.primary.contrast,
+    fontSize: FontSizes["2xl"],
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
   },
   headerSubtitle: {
     fontSize: FontSizes.base,
-    color: AppColors.primary.contrast,
     opacity: 0.9,
-    marginTop: 2,
-  },
-  qrButton: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
-  // Current Class Banner
-  currentClassBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  // Live Banner
+  liveBanner: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
     marginBottom: Spacing.sm,
     gap: Spacing.xs,
   },
-  currentClassDot: {
+  liveDot: {
     width: 8,
     height: 8,
     borderRadius: BorderRadius.full,
-    backgroundColor: '#FF4444',
+    backgroundColor: "#FF4444",
   },
-  currentClassText: {
+  liveText: {
     fontSize: FontSizes.sm,
-    fontWeight: '600',
-    color: AppColors.primary.contrast,
+    fontWeight: "600",
   },
 
   // Class Selector
   classSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: AppColors.ui.card,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: Spacing.md,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.lg,
   },
   classSelectorLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.sm,
     flex: 1,
   },
@@ -574,253 +807,272 @@ const styles = StyleSheet.create({
   },
   classSelectorTitle: {
     fontSize: FontSizes.base,
-    fontWeight: '600',
-    color: AppColors.text.primary,
+    fontWeight: "600",
   },
   classSelectorSubtitle: {
     fontSize: FontSizes.sm,
-    color: AppColors.text.secondary,
     marginTop: 2,
+    opacity: 0.9,
+  },
+
+  // Progress Section
+  progressSection: {
+    padding: Spacing.lg,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.md,
+    borderRadius: BorderRadius.lg,
+  },
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  progressTitle: {
+    fontSize: FontSizes.base,
+    fontWeight: "600",
+  },
+  progressPercent: {
+    fontSize: FontSizes.xl,
+    fontWeight: "700",
+  },
+  progressBarBg: {
+    height: 8,
+    borderRadius: BorderRadius.full,
+    overflow: "hidden",
+    marginBottom: Spacing.xs,
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: BorderRadius.full,
+  },
+  progressSubtext: {
+    fontSize: FontSizes.sm,
   },
 
   // Stats
   statsContainer: {
-    flexDirection: 'row',
-    padding: Spacing.md,
-    gap: Spacing.sm,
+    flexDirection: "row",
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
-  statBox: {
+  statCard: {
     flex: 1,
-    padding: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    alignItems: 'center',
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.xl,
+    alignItems: "center",
+    gap: Spacing.xs,
   },
   statNumber: {
-    fontSize: FontSizes.xl,
-    fontWeight: 'bold',
-    marginBottom: 2,
+    fontSize: FontSizes["3xl"],
+    fontWeight: "700",
   },
   statLabel: {
-    fontSize: FontSizes.xs,
-    fontWeight: '600',
+    fontSize: FontSizes.sm,
+    fontWeight: "600",
   },
 
-  // Mark All
-  markAllContainer: {
+  // Scan Button
+  scanSection: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingVertical: Spacing.md,
   },
-  markAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: AppColors.status.success.main,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.xs,
-    shadowColor: AppColors.status.success.main,
-    shadowOffset: { width: 0, height: 2 },
+  scanButton: {
+    borderRadius: BorderRadius.xl,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  markAllButtonText: {
-    fontSize: FontSizes.base,
-    fontWeight: '600',
-    color: AppColors.primary.contrast,
+  scanButtonGradient: {
+    paddingVertical: Spacing.xl,
+    alignItems: "center",
+    gap: Spacing.sm,
+  },
+  scanButtonText: {
+    fontSize: FontSizes.xl,
+    fontWeight: "700",
+  },
+  scanButtonSubtext: {
+    fontSize: FontSizes.sm,
+    opacity: 0.8,
+  },
+
+  // List Header
+  listHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  listTitle: {
+    fontSize: FontSizes.lg,
+    fontWeight: "700",
+  },
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.md,
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: BorderRadius.full,
+  },
+  legendText: {
+    fontSize: FontSizes.xs,
+    fontWeight: "500",
   },
 
   // Student List
   studentList: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingBottom: 100,
   },
   studentCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: AppColors.ui.card,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: AppColors.ui.border,
-    shadowColor: AppColors.ui.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   studentInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   studentAvatar: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.primary.main,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: Spacing.md,
   },
   avatarText: {
     fontSize: FontSizes.base,
-    fontWeight: 'bold',
-    color: AppColors.primary.contrast,
+    fontWeight: "700",
   },
   studentDetails: {
     flex: 1,
   },
   studentName: {
     fontSize: FontSizes.base,
-    fontWeight: '600',
-    color: AppColors.text.primary,
+    fontWeight: "600",
     marginBottom: 2,
   },
   studentRoll: {
     fontSize: FontSizes.sm,
-    color: AppColors.text.secondary,
   },
-
-  // Radio Buttons
-  radioGroup: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  radioButton: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  radioOuter: {
-    width: 28,
-    height: 28,
-    borderRadius: BorderRadius.full,
-    borderWidth: 2.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.primary.contrast,
-  },
-  radioLabel: {
+  scannedTime: {
     fontSize: FontSizes.xs,
-    fontWeight: '600',
-    color: AppColors.text.secondary,
+    fontWeight: "600",
+    marginTop: 2,
   },
 
   // Submit Button
   submitContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: Spacing.lg,
-    backgroundColor: AppColors.background.primary,
     borderTopWidth: 1,
-    borderTopColor: AppColors.ui.border,
   },
   submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: AppColors.primary.main,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
-    shadowColor: AppColors.primary.main,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
   },
+  submitButtonGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.md,
+    gap: Spacing.sm,
+  },
   submitButtonText: {
-    fontSize: FontSizes.base,
-    fontWeight: '600',
-    color: AppColors.primary.contrast,
+    fontSize: FontSizes.lg,
+    fontWeight: "600",
   },
 
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: AppColors.ui.overlay,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   pickerModal: {
-    backgroundColor: AppColors.ui.card,
     borderTopLeftRadius: BorderRadius.xl,
     borderTopRightRadius: BorderRadius.xl,
-    maxHeight: '70%',
+    maxHeight: "70%",
   },
   pickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: Spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.ui.border,
   },
   pickerTitle: {
     fontSize: FontSizes.xl,
-    fontWeight: '700',
-    color: AppColors.text.primary,
+    fontWeight: "700",
   },
   pickerList: {
     maxHeight: 400,
   },
   pickerItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: AppColors.ui.divider,
-  },
-  pickerItemSelected: {
-    backgroundColor: AppColors.background.secondary,
   },
   pickerItemLeft: {
     flex: 1,
   },
   pickerItemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.sm,
     marginBottom: 4,
   },
   pickerItemTitle: {
     fontSize: FontSizes.base,
-    fontWeight: '600',
-    color: AppColors.text.primary,
+    fontWeight: "600",
   },
-  liveBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FF4444',
+  liveChip: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: Spacing.xs,
     paddingVertical: 2,
     borderRadius: BorderRadius.sm,
     gap: 4,
   },
-  liveDot: {
+  liveChipDot: {
     width: 6,
     height: 6,
     borderRadius: BorderRadius.full,
-    backgroundColor: AppColors.primary.contrast,
   },
-  liveText: {
+  liveChipText: {
     fontSize: 10,
-    fontWeight: '700',
-    color: AppColors.primary.contrast,
+    fontWeight: "700",
   },
   pickerItemSubject: {
     fontSize: FontSizes.base,
-    color: AppColors.text.primary,
     marginBottom: 2,
   },
   pickerItemTime: {
     fontSize: FontSizes.sm,
-    color: AppColors.text.secondary,
   },
 });
