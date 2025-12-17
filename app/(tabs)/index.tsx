@@ -15,16 +15,19 @@ import { DetailedReportModal } from "@/components/dashboard/DetailedReportModal"
 import { NotificationModal } from "@/components/dashboard/NotificationModal";
 import { ScheduleCard } from "@/components/dashboard/ScheduleCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
+import { CheckInOutCard } from "@/components/profile/CheckInOutCard";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import {
   classSchedule,
   dashboardStats,
+  currentAttendance as initialCurrentAttendance,
   initialNotifications,
   recentActivities as initialRecentActivities,
   teacherProfile,
   todayAttendance,
+  type AttendanceRecord,
   type Notification,
   type QuickAction,
   type RecentActivity,
@@ -71,6 +74,16 @@ export default function DashboardScreen() {
 
   const [notifications, setNotifications] =
     useState<Notification[]>(initialNotifications);
+
+  // Check-in/out state
+  const [checkInLoading, setCheckInLoading] = useState(false);
+  const [currentAttendance, setCurrentAttendance] = useState<AttendanceRecord>(
+    initialCurrentAttendance
+  );
+
+  const isCheckedIn =
+    currentAttendance.status === "checked-in" ||
+    currentAttendance.status === "present";
 
   // Get dynamic greeting
   const getGreeting = () => {
@@ -210,6 +223,63 @@ export default function DashboardScreen() {
     }
   };
 
+  const handleCheckIn = () => {
+    setCheckInLoading(true);
+    setTimeout(() => {
+      const now = new Date();
+      const checkInTime = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      setCurrentAttendance({
+        ...currentAttendance,
+        checkInTime,
+        status: "checked-in",
+      });
+
+      setCheckInLoading(false);
+      Alert.alert(
+        "✅ Checked In Successfully",
+        `Welcome! You checked in at ${checkInTime}`,
+        [{ text: "OK" }]
+      );
+    }, 1000);
+  };
+
+  const handleCheckOut = () => {
+    Alert.alert("Check Out", "Are you sure you want to check out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Check Out",
+        style: "default",
+        onPress: () => {
+          setCheckInLoading(true);
+          setTimeout(() => {
+            const now = new Date();
+            const checkOutTime = now.toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            setCurrentAttendance({
+              ...currentAttendance,
+              checkOutTime,
+              status: "present",
+            });
+
+            setCheckInLoading(false);
+            Alert.alert(
+              "👋 Checked Out Successfully",
+              `Thank you for your hard work today!`,
+              [{ text: "OK" }]
+            );
+          }, 1000);
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background.primary }]}
@@ -343,6 +413,21 @@ export default function DashboardScreen() {
             />
           </View>
         </Animated.View>
+
+        {/* Teacher Check-In/Out Status */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
+            My Attendance
+          </Text>
+          <CheckInOutCard
+            isCheckedIn={isCheckedIn}
+            checkInTime={currentAttendance.checkInTime}
+            checkOutTime={currentAttendance.checkOutTime}
+            onCheckIn={handleCheckIn}
+            onCheckOut={handleCheckOut}
+            loading={checkInLoading}
+          />
+        </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
