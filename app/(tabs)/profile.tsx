@@ -11,6 +11,10 @@
 
 import { AttendanceHistory } from "@/components/profile/AttendanceHistory";
 import { CheckInOutCard } from "@/components/profile/CheckInOutCard";
+import {
+  LeaveApplication,
+  LeaveApplicationModal,
+} from "@/components/profile/LeaveApplicationModal";
 import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import {
@@ -133,7 +137,11 @@ export default function ProfileScreen() {
   const [notifications, setNotifications] = useState(true);
   const [biometrics, setBiometrics] = useState(false);
   const [showAttendanceHistory, setShowAttendanceHistory] = useState(false);
+  const [showLeaveApplication, setShowLeaveApplication] = useState(false);
   const [checkInLoading, setCheckInLoading] = useState(false);
+  const [leaveApplications, setLeaveApplications] = useState<
+    LeaveApplication[]
+  >([]);
 
   // Attendance state
   const [currentAttendance, setCurrentAttendance] = useState<AttendanceRecord>(
@@ -240,6 +248,11 @@ export default function ProfileScreen() {
 
   const handleChangePassword = () => {
     Alert.alert("Security", "Password change flow initiated.");
+  };
+
+  const handleLeaveApplicationSubmit = (application: LeaveApplication) => {
+    setLeaveApplications([application, ...leaveApplications]);
+    setShowLeaveApplication(false);
   };
 
   return (
@@ -470,6 +483,41 @@ export default function ProfileScreen() {
           </View>
         </View>
 
+        {/* Leave Management */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionHeader, { color: colors.text.tertiary }]}>
+            LEAVE MANAGEMENT
+          </Text>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.background.secondary },
+            ]}
+          >
+            <SettingItem
+              icon="calendar-outline"
+              title="Apply for Leave"
+              subtitle="Submit leave application"
+              onPress={() => setShowLeaveApplication(true)}
+              color={colors.status.warning.main}
+            />
+            <SettingItem
+              icon="document-text-outline"
+              title="Leave History"
+              subtitle={`${leaveApplications.length} application(s)`}
+              onPress={() =>
+                Alert.alert(
+                  "Leave History",
+                  leaveApplications.length > 0
+                    ? `You have ${leaveApplications.length} leave application(s)`
+                    : "No leave applications yet"
+                )
+              }
+              color={colors.status.info.main}
+            />
+          </View>
+        </View>
+
         {/* Preferences */}
         <View style={styles.section}>
           <Text style={[styles.sectionHeader, { color: colors.text.tertiary }]}>
@@ -604,6 +652,13 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Leave Application Modal */}
+      <LeaveApplicationModal
+        visible={showLeaveApplication}
+        onClose={() => setShowLeaveApplication(false)}
+        onSubmit={handleLeaveApplicationSubmit}
+      />
     </>
   );
 }

@@ -73,6 +73,7 @@ export const currentAttendance: AttendanceRecord = {
 };
 
 export const attendanceHistory: AttendanceRecord[] = [
+  // December 2025
   {
     id: '1',
     date: '2025-12-16',
@@ -95,6 +96,88 @@ export const attendanceHistory: AttendanceRecord[] = [
     checkInTime: '09:00 AM',
     checkOutTime: '04:20 PM',
     workingHours: '7h 20m',
+    status: 'present',
+  },
+  {
+    id: '4',
+    date: '2025-12-13',
+    checkInTime: '08:55 AM',
+    checkOutTime: '04:25 PM',
+    workingHours: '7h 30m',
+    status: 'present',
+  },
+  {
+    id: '5',
+    date: '2025-12-12',
+    checkInTime: '08:40 AM',
+    checkOutTime: '04:35 PM',
+    workingHours: '7h 55m',
+    status: 'present',
+  },
+  // November 2025
+  {
+    id: '6',
+    date: '2025-11-30',
+    checkInTime: '08:50 AM',
+    checkOutTime: '04:20 PM',
+    workingHours: '7h 30m',
+    status: 'present',
+  },
+  {
+    id: '7',
+    date: '2025-11-29',
+    checkInTime: '08:45 AM',
+    checkOutTime: '04:15 PM',
+    workingHours: '7h 30m',
+    status: 'present',
+  },
+  {
+    id: '8',
+    date: '2025-11-28',
+    checkInTime: '08:55 AM',
+    checkOutTime: '04:10 PM',
+    workingHours: '7h 15m',
+    status: 'present',
+  },
+  {
+    id: '9',
+    date: '2025-11-27',
+    checkInTime: '09:00 AM',
+    checkOutTime: '04:30 PM',
+    workingHours: '7h 30m',
+    status: 'present',
+  },
+  {
+    id: '10',
+    date: '2025-11-26',
+    checkInTime: '08:40 AM',
+    checkOutTime: '04:25 PM',
+    workingHours: '7h 45m',
+    status: 'present',
+  },
+  // October 2025
+  {
+    id: '11',
+    date: '2025-10-31',
+    checkInTime: '08:50 AM',
+    checkOutTime: '04:20 PM',
+    workingHours: '7h 30m',
+    status: 'present',
+  },
+  {
+    id: '12',
+    date: '2025-10-30',
+    checkInTime: '08:45 AM',
+    checkOutTime: '04:15 PM',
+    workingHours: '7h 30m',
+    status: 'present',
+  },
+  {
+    id: '13',
+    date: '2025-10-29',
+    checkInTime: '08:55 AM',
+    checkOutTime: '04:25 PM',
+    workingHours: '7h 30m',
     status: 'present',
   },
 ];
