@@ -1,12 +1,18 @@
 /**
- * Professional Sidebar Drawer Component
+ * Professional Sidebar Drawer Component (Optimized)
  *
  * Features:
  * - LinkedIn-style sidebar navigation
- * - Profile information display
- * - Quick access to settings and logout
- * - Smooth animations and modern design
- * - Glassmorphism effect
+ * - Profile information display with smooth animations
+ * - Memoized components for optimal performance
+ * - Enhanced accessibility and touch feedback
+ * - Glassmorphism effect with gradient backgrounds
+ *
+ * Performance Optimizations:
+ * - React.memo to prevent unnecessary re-renders
+ * - useCallback for event handlers
+ * - Optimized animations with native driver
+ * - Extracted constants and memoized values
  */
 
 import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
@@ -15,22 +21,41 @@ import { teacherProfile } from "@/data";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   Animated,
   Dimensions,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 
+// Constants
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.85;
 
+// Animation Constants for better control
+const ANIMATION_CONFIG = {
+  springTension: 65,
+  springFriction: 11,
+  fadeInDuration: 300,
+  fadeOutDuration: 250,
+  slideOutDuration: 250,
+};
+
+// Stats Constants
+const TEACHER_STATS = {
+  classes: 8,
+  students: 245,
+  rating: 4.8,
+} as const;
+
+// TypeScript Interfaces
 interface SidebarDrawerProps {
   visible: boolean;
   onClose: () => void;
@@ -47,63 +72,112 @@ interface MenuItemProps {
   badgeCount?: number;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({
-  icon,
-  title,
-  subtitle,
-  onPress,
-  color,
-  showBadge,
-  badgeCount,
-}) => {
-  const { colors } = useTheme();
+interface StatItemProps {
+  value: number | string;
+  label: string;
+  color: string;
+  showDivider?: boolean;
+  dividerColor?: string;
+}
 
-  return (
-    <TouchableOpacity
-      style={[
-        styles.menuItem,
-        {
-          backgroundColor: colors.background.secondary,
-          borderBottomColor: colors.ui.divider,
-        },
-      ]}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
-      <View
+// Memoized Stat Item Component
+const StatItem = React.memo<StatItemProps>(
+  ({ value, label, color, showDivider, dividerColor }) => {
+    const { colors } = useTheme();
+
+    return (
+      <>
+        <View style={styles.statItem}>
+          <Text style={[styles.statValue, { color }]}>{value}</Text>
+          <Text style={[styles.statLabel, { color: colors.text.secondary }]}>
+            {label}
+          </Text>
+        </View>
+        {showDivider && (
+          <View
+            style={[
+              styles.statDivider,
+              { backgroundColor: dividerColor || colors.ui.divider },
+            ]}
+          />
+        )}
+      </>
+    );
+  }
+);
+
+StatItem.displayName = "StatItem";
+
+// Memoized Menu Item Component
+const MenuItem = React.memo<MenuItemProps>(
+  ({ icon, title, subtitle, onPress, color, showBadge, badgeCount }) => {
+    const { colors } = useTheme();
+    const iconBgColor = useMemo(
+      () => (color ? `${color}15` : `${colors.primary.main}15`),
+      [color, colors.primary.main]
+    );
+
+    return (
+      <TouchableOpacity
         style={[
-          styles.menuIconContainer,
+          styles.menuItem,
           {
-            backgroundColor: color ? `${color}15` : `${colors.primary.main}15`,
+            backgroundColor: colors.background.secondary,
+            borderBottomColor: colors.ui.divider,
           },
         ]}
+        onPress={onPress}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityHint={subtitle}
       >
-        <Ionicons name={icon} size={22} color={color || colors.primary.main} />
-      </View>
-
-      <View style={styles.menuContent}>
-        <Text style={[styles.menuTitle, { color: colors.text.primary }]}>
-          {title}
-        </Text>
-        {subtitle && (
-          <Text style={[styles.menuSubtitle, { color: colors.text.secondary }]}>
-            {subtitle}
-          </Text>
-        )}
-      </View>
-
-      {showBadge && badgeCount && badgeCount > 0 && (
         <View
-          style={[styles.badge, { backgroundColor: colors.status.error.main }]}
+          style={[styles.menuIconContainer, { backgroundColor: iconBgColor }]}
         >
-          <Text style={styles.badgeText}>{badgeCount}</Text>
+          <Ionicons
+            name={icon}
+            size={22}
+            color={color || colors.primary.main}
+          />
         </View>
-      )}
 
-      <Ionicons name="chevron-forward" size={20} color={colors.text.tertiary} />
-    </TouchableOpacity>
-  );
-};
+        <View style={styles.menuContent}>
+          <Text style={[styles.menuTitle, { color: colors.text.primary }]}>
+            {title}
+          </Text>
+          {subtitle && (
+            <Text
+              style={[styles.menuSubtitle, { color: colors.text.secondary }]}
+            >
+              {subtitle}
+            </Text>
+          )}
+        </View>
+
+        {showBadge && badgeCount && badgeCount > 0 && (
+          <View
+            style={[
+              styles.badge,
+              { backgroundColor: colors.status.error.main },
+            ]}
+            accessibilityLabel={`${badgeCount} notifications`}
+          >
+            <Text style={styles.badgeText}>{badgeCount}</Text>
+          </View>
+        )}
+
+        <Ionicons
+          name="chevron-forward"
+          size={20}
+          color={colors.text.tertiary}
+        />
+      </TouchableOpacity>
+    );
+  }
+);
+
+MenuItem.displayName = "MenuItem";
 
 export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   visible,
@@ -112,21 +186,45 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const router = useRouter();
-  const slideAnim = React.useRef(new Animated.Value(-DRAWER_WIDTH)).current;
-  const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
-  React.useEffect(() => {
+  // Animation refs - use useRef to persist across renders
+  const slideAnim = useRef(new Animated.Value(-DRAWER_WIDTH)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Memoized teacher initials calculation
+  const teacherInitials = useMemo(
+    () =>
+      teacherProfile.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2),
+    []
+  );
+
+  // Memoized gradient colors
+  const gradientColors = useMemo(
+    () =>
+      isDark
+        ? ([colors.primary.main, colors.primary.dark || "#1a237e"] as const)
+        : ([colors.primary.main, colors.primary.light || "#5c6bc0"] as const),
+    [isDark, colors.primary.main, colors.primary.dark, colors.primary.light]
+  );
+
+  // Animation effect with cleanup
+  useEffect(() => {
     if (visible) {
       Animated.parallel([
         Animated.spring(slideAnim, {
           toValue: 0,
           useNativeDriver: true,
-          tension: 65,
-          friction: 11,
+          tension: ANIMATION_CONFIG.springTension,
+          friction: ANIMATION_CONFIG.springFriction,
         }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: ANIMATION_CONFIG.fadeInDuration,
           useNativeDriver: true,
         }),
       ]).start();
@@ -134,44 +232,74 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
       Animated.parallel([
         Animated.timing(slideAnim, {
           toValue: -DRAWER_WIDTH,
-          duration: 250,
+          duration: ANIMATION_CONFIG.slideOutDuration,
           useNativeDriver: true,
         }),
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 250,
+          duration: ANIMATION_CONFIG.fadeOutDuration,
           useNativeDriver: true,
         }),
       ]).start();
     }
-  }, [visible]);
+  }, [visible, slideAnim, fadeAnim]);
 
-  const handleEditProfile = () => {
+  // Memoized event handlers with useCallback
+  const handleDashboard = useCallback(() => {
     onClose();
-    // Navigate to edit profile
-  };
+    router.push("/");
+  }, [onClose, router]);
 
-  const handleSettings = () => {
+  const handleClasses = useCallback(() => {
     onClose();
-    router.push("/(tabs)/profile");
-  };
+    router.push("/classes");
+  }, [onClose, router]);
 
-  const handleNotifications = () => {
+  const handleStudents = useCallback(() => {
     onClose();
-    // Navigate to notifications
-  };
+    // Navigate to students when screen is created
+    console.log("Students screen - Coming soon!");
+  }, [onClose]);
 
-  const handleHelp = () => {
+  const handleSchedule = useCallback(() => {
     onClose();
-    // Navigate to help
-  };
+    // Navigate to schedule when screen is created
+    console.log("Schedule screen - Coming soon!");
+  }, [onClose]);
 
-  const handleLogout = () => {
+  const handleAttendance = useCallback(() => {
+    onClose();
+    router.push("/attendance");
+  }, [onClose, router]);
+
+  const handleEditProfile = useCallback(() => {
+    onClose();
+    router.push("/profile");
+  }, [onClose, router]);
+
+  const handleSettings = useCallback(() => {
+    onClose();
+    router.push("/profile");
+  }, [onClose, router]);
+
+  const handleNotifications = useCallback(() => {
+    onClose();
+    // Navigate to notifications when available
+    console.log("Notifications opened");
+  }, [onClose]);
+
+  const handleHelp = useCallback(() => {
+    onClose();
+    // Navigate to help when available
+    console.log("Help opened");
+  }, [onClose]);
+
+  const handleLogout = useCallback(() => {
     onClose();
     if (onLogout) {
       onLogout();
     }
-  };
+  }, [onClose, onLogout]);
 
   return (
     <Modal
@@ -206,11 +334,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
         >
           {/* Header with Gradient */}
           <LinearGradient
-            colors={
-              isDark
-                ? [colors.primary.main, colors.primary.dark || "#1a237e"]
-                : [colors.primary.main, colors.primary.light || "#5c6bc0"]
-            }
+            colors={gradientColors}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.drawerHeader}
@@ -219,6 +343,8 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               style={styles.closeButton}
               onPress={onClose}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Close drawer"
             >
               <Ionicons name="close" size={28} color="#FFF" />
             </TouchableOpacity>
@@ -233,12 +359,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 <Text
                   style={[styles.avatarText, { color: colors.primary.main }]}
                 >
-                  {teacherProfile.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2)}
+                  {teacherInitials}
                 </Text>
                 <TouchableOpacity
                   style={[
@@ -246,6 +367,8 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                     { backgroundColor: colors.secondary.main },
                   ]}
                   onPress={handleEditProfile}
+                  accessibilityRole="button"
+                  accessibilityLabel="Edit profile"
                 >
                   <Ionicons name="pencil" size={12} color="#FFF" />
                 </TouchableOpacity>
@@ -261,61 +384,76 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             </View>
           </LinearGradient>
 
-          {/* Menu Items */}
-          <View style={styles.menuContainer}>
+          {/* Menu Items - Wrapped in ScrollView */}
+          <ScrollView
+            style={styles.menuContainer}
+            showsVerticalScrollIndicator={false}
+            bounces={true}
+            contentContainerStyle={styles.menuContentContainer}
+          >
             {/* Quick Stats */}
             <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text
-                  style={[styles.statValue, { color: colors.primary.main }]}
-                >
-                  8
-                </Text>
-                <Text
-                  style={[styles.statLabel, { color: colors.text.secondary }]}
-                >
-                  Classes
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.statDivider,
-                  { backgroundColor: colors.ui.divider },
-                ]}
+              <StatItem
+                value={TEACHER_STATS.classes}
+                label="Classes"
+                color={colors.primary.main}
+                showDivider
               />
-              <View style={styles.statItem}>
-                <Text
-                  style={[styles.statValue, { color: colors.secondary.main }]}
-                >
-                  245
-                </Text>
-                <Text
-                  style={[styles.statLabel, { color: colors.text.secondary }]}
-                >
-                  Students
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.statDivider,
-                  { backgroundColor: colors.ui.divider },
-                ]}
+              <StatItem
+                value={TEACHER_STATS.students}
+                label="Students"
+                color={colors.secondary.main}
+                showDivider
               />
-              <View style={styles.statItem}>
-                <Text
-                  style={[
-                    styles.statValue,
-                    { color: colors.status.success.main },
-                  ]}
-                >
-                  4.8
-                </Text>
-                <Text
-                  style={[styles.statLabel, { color: colors.text.secondary }]}
-                >
-                  Rating
-                </Text>
-              </View>
+              <StatItem
+                value={TEACHER_STATS.rating}
+                label="Rating"
+                color={colors.status.success.main}
+              />
+            </View>
+
+            {/* Section: Navigation */}
+            <View style={styles.menuSection}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.text.tertiary }]}
+              >
+                NAVIGATION
+              </Text>
+              <MenuItem
+                icon="home-outline"
+                title="Dashboard"
+                subtitle="Overview & analytics"
+                onPress={handleDashboard}
+                color={colors.primary.main}
+              />
+              <MenuItem
+                icon="book-outline"
+                title="Classes"
+                subtitle="Manage your classes"
+                onPress={handleClasses}
+                color={colors.secondary.main}
+              />
+              <MenuItem
+                icon="people-outline"
+                title="Students"
+                subtitle="Student management"
+                onPress={handleStudents}
+                color={colors.status.info.main}
+              />
+              <MenuItem
+                icon="calendar-outline"
+                title="Schedule"
+                subtitle="View your timetable"
+                onPress={handleSchedule}
+                color={colors.status.warning.main}
+              />
+              <MenuItem
+                icon="checkmark-done-outline"
+                title="Attendance"
+                subtitle="Track attendance"
+                onPress={handleAttendance}
+                color={colors.status.success.main}
+              />
             </View>
 
             {/* Section: Account */}
@@ -372,7 +510,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 color={colors.text.secondary}
               />
             </View>
-          </View>
+          </ScrollView>
 
           {/* Footer - Logout Button */}
           <View style={styles.footer}>
@@ -386,6 +524,9 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
               ]}
               onPress={handleLogout}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="Log out"
+              accessibilityHint="Double tap to log out of your account"
             >
               <Ionicons
                 name="log-out-outline"
@@ -485,7 +626,10 @@ const styles = StyleSheet.create({
   },
   menuContainer: {
     flex: 1,
+  },
+  menuContentContainer: {
     paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
   statsRow: {
     flexDirection: "row",
@@ -525,17 +669,25 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.md + 2,
     paddingHorizontal: Spacing.lg,
-    borderBottomWidth: 1,
+    marginHorizontal: Spacing.sm,
+    marginVertical: Spacing.xs / 2,
+    borderRadius: BorderRadius.md,
+    borderBottomWidth: 0,
   },
   menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   menuContent: {
     flex: 1,
