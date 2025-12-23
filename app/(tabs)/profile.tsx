@@ -274,8 +274,15 @@ export default function ProfileScreen() {
         {
           text: "Logout",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             closeAlert();
+            // Clear AsyncStorage
+            try {
+              await AsyncStorage.removeItem("isLoggedIn");
+              await AsyncStorage.removeItem("userEmail");
+            } catch (error) {
+              console.error("Error clearing auth data:", error);
+            }
             router.replace("/");
           },
         },

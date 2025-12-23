@@ -3,17 +3,18 @@ import {
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
 import "react-native-reanimated";
 
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 
-export const unstable_settings = {
-  anchor: "(tabs)",
-};
-
 function RootLayoutNav() {
+  const router = useRouter();
+  const segments = useSegments();
+  const { isLoggedIn, isLoading } = useAuth();
   const { isDark, colors } = useTheme();
 
   // Custom navigation theme that matches our app theme
@@ -43,11 +44,42 @@ function RootLayoutNav() {
     },
   };
 
+  // Handle navigation based on auth state
+  useEffect(() => {
+    if (isLoading) return;
+
+    const inTabsGroup = segments[0] === "(tabs)";
+    const inAuthGroup = segments.length === 0 || segments[0] === "index";
+
+    console.log("📍 Navigation Check:", {
+      isLoggedIn,
+      segments,
+      inTabsGroup,
+      inAuthGroup,
+    });
+
+    if (!isLoggedIn && !inAuthGroup) {
+      // If not logged in and not in auth screens, redirect to login
+      console.log("🔒 Access denied: Redirecting to Login");
+      router.replace("/");
+    } else if (isLoggedIn && inAuthGroup) {
+      // If logged in and on an auth screen, redirect to dashboard
+      console.log("✅ Authenticated: Redirecting to Dashboard");
+      router.replace("/(tabs)");
+    }
+  }, [isLoggedIn, segments, isLoading]);
+
+  // Don't render anything until we check auth status
+  if (isLoading) {
+    return null;
+  }
+
   return (
     <NavigationThemeProvider
       value={isDark ? customDarkTheme : customLightTheme}
     >
       <Stack
+        initialRouteName="index"
         screenOptions={{
           animation: "slide_from_right",
           animationDuration: 700,
@@ -61,17 +93,17 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            animation: "fade",
-          }}
-        />
-        <Stack.Screen
           name="index"
           options={{
             headerShown: false,
             animation: "none",
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+            animation: "fade",
           }}
         />
         <Stack.Screen
@@ -112,14 +144,6 @@ function RootLayoutNav() {
             animation: "slide_from_right",
           }}
         />
-        <Stack.Screen
-          name="modal"
-          options={{
-            presentation: "modal",
-            title: "Modal",
-            animation: "fade_from_bottom",
-          }}
-        />
       </Stack>
       <StatusBar style={isDark ? "light" : "dark"} />
     </NavigationThemeProvider>
@@ -129,7 +153,9 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <RootLayoutNav />
+      <AuthProvider>
+        <RootLayoutNav />
+      </AuthProvider>
     </ThemeProvider>
   );
 }

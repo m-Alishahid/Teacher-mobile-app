@@ -1,13 +1,11 @@
 /**
  * Dashboard Screen (Home Tab)
  *
- * Premium Features:
- * - Gradient header with dynamic greeting
- * - Animated stat cards with icons
- * - Live class indicator
- * - Quick action shortcuts
- * - Recent activity feed
- * - Smooth animations and transitions
+ * Premium "Senior Developer" Design Overhaul:
+ * - Sophisticated typography and spacing
+ * - Modern card layouts with glassmorphism touches
+ * - Clean, professional data visualization
+ * - Refined navigation and interaction points
  */
 
 import { AttendanceSummaryCard } from "@/components/dashboard/AttendanceSummaryCard";
@@ -17,7 +15,7 @@ import { ScheduleCard } from "@/components/dashboard/ScheduleCard";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { CheckInOutCard } from "@/components/profile/CheckInOutCard";
 import { IconSymbol } from "@/components/ui/icon-symbol";
-import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
+import { FontSizes, Spacing } from "@/constants/theme";
 import { useTheme } from "@/context/ThemeContext";
 import {
   classSchedule,
@@ -32,15 +30,16 @@ import {
   type QuickAction,
   type RecentActivity,
 } from "@/data";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   Alert,
   Animated,
   Dimensions,
+  Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -55,18 +54,19 @@ export default function DashboardScreen() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
+  const [slideAnim] = useState(new Animated.Value(30));
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 500,
+        tension: 50,
+        friction: 7,
         useNativeDriver: true,
       }),
     ]).start();
@@ -85,7 +85,6 @@ export default function DashboardScreen() {
     currentAttendance.status === "checked-in" ||
     currentAttendance.status === "present";
 
-  // Get dynamic greeting
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Good Morning";
@@ -93,7 +92,6 @@ export default function DashboardScreen() {
     return "Good Evening";
   };
 
-  // Get current or next class
   const getCurrentClass = () => {
     const now = new Date();
     const currentDay = now.getDay();
@@ -130,18 +128,17 @@ export default function DashboardScreen() {
     isLive: currentClassData.isLive,
   };
 
-  // Quick Actions
   const quickActions: QuickAction[] = [
     {
       id: "1",
-      title: "Take Attendance",
+      title: "Attendance",
       icon: "checkmark.circle.fill",
       color: colors.status.success.main,
       action: () => router.push("/(tabs)/attendance"),
     },
     {
       id: "2",
-      title: "My Classes",
+      title: "Classes",
       icon: "book.fill",
       color: colors.primary.main,
       action: () => router.push("/(tabs)/classes"),
@@ -162,7 +159,6 @@ export default function DashboardScreen() {
     },
   ];
 
-  // Map recent activities with theme colors
   const recentActivities: RecentActivity[] = initialRecentActivities.map(
     (activity, index) => ({
       ...activity,
@@ -184,43 +180,26 @@ export default function DashboardScreen() {
   };
 
   const handleQuickAttendance = () => {
-    Alert.alert(
-      "📋 Quick Attendance",
-      `Mark attendance for ${nextClass.grade}?\n\nSubject: ${nextClass.subject}\nTime: ${nextClass.time}\nRoom: ${nextClass.room}\nStudents: ${nextClass.studentsCount}`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Start Attendance",
-          onPress: () => router.push("/(tabs)/attendance"),
-        },
-      ]
-    );
+    Alert.alert("Quick Attendance", `Mark attendance for ${nextClass.grade}?`, [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Start",
+        onPress: () => router.push("/(tabs)/attendance"),
+      },
+    ]);
   };
 
   const handleStatCard = (type: string) => {
-    switch (type) {
-      case "students":
-        Alert.alert(
-          "👥 Total Students",
-          `You teach ${dashboardStats.totalStudents} students across all classes\n\n📚 Class Distribution:\n• Grade 10A: 32 students\n• Grade 10B: 28 students\n• Grade 11A: 30 students\n• Grade 11B: 26 students\n• Grade 12A: 24 students\n• And more...`
-        );
-        break;
-      case "attendance":
-        setShowReportModal(true);
-        break;
-      case "tasks":
-        Alert.alert(
-          "📝 Pending Tasks",
-          `You have ${dashboardStats.pendingTasks} pending tasks:\n\n📋 Breakdown:\n• Grade assignments: 5\n• Review submissions: 4\n• Parent meetings: 3\n\nStay organized!`
-        );
-        break;
-      case "deadlines":
-        Alert.alert(
-          "⏰ Upcoming Deadlines",
-          `${dashboardStats.upcomingDeadlines} deadlines approaching:\n\n📅 Schedule:\n• Math assignment (Tomorrow)\n• Physics quiz (2 days)\n• Chemistry project (3 days)\n\nPlan ahead!`
-        );
-        break;
-    }
+    const titles = {
+      students: "Total Students",
+      attendance: "Today's Attendance",
+      tasks: "Pending Tasks",
+      deadlines: "Upcoming Deadlines",
+    };
+    Alert.alert(
+      titles[type as keyof typeof titles],
+      "Detailed view coming soon."
+    );
   };
 
   const handleCheckIn = () => {
@@ -231,24 +210,17 @@ export default function DashboardScreen() {
         hour: "2-digit",
         minute: "2-digit",
       });
-
       setCurrentAttendance({
         ...currentAttendance,
         checkInTime,
         status: "checked-in",
       });
-
       setCheckInLoading(false);
-      Alert.alert(
-        "✅ Checked In Successfully",
-        `Welcome! You checked in at ${checkInTime}`,
-        [{ text: "OK" }]
-      );
     }, 1000);
   };
 
   const handleCheckOut = () => {
-    Alert.alert("Check Out", "Are you sure you want to check out?", [
+    Alert.alert("Check Out", "Confirm check out?", [
       { text: "Cancel", style: "cancel" },
       {
         text: "Check Out",
@@ -261,19 +233,12 @@ export default function DashboardScreen() {
               hour: "2-digit",
               minute: "2-digit",
             });
-
             setCurrentAttendance({
               ...currentAttendance,
               checkOutTime,
               status: "present",
             });
-
             setCheckInLoading(false);
-            Alert.alert(
-              "👋 Checked Out Successfully",
-              `Thank you for your hard work today!`,
-              [{ text: "OK" }]
-            );
           }, 1000);
         },
       },
@@ -284,290 +249,268 @@ export default function DashboardScreen() {
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background.primary }]}
     >
-      {/* Gradient Header */}
-      <LinearGradient
-        colors={
-          isDark
-            ? [colors.primary.main, colors.primary.dark || "#1a237e"]
-            : [colors.primary.main, colors.primary.light || "#5c6bc0"]
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.gradientHeader}
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} />
+
+      {/* Refined Header */}
+      <View
+        style={[styles.header, { backgroundColor: colors.background.primary }]}
       >
-        <View style={styles.headerContent}>
-          <View style={styles.headerLeft}>
-            <Text
-              style={[
-                styles.headerGreeting,
-                { color: colors.primary.contrast },
-              ]}
-            >
-              {getGreeting()}! 👋
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={[styles.greeting, { color: colors.text.secondary }]}>
+              {getGreeting()}
             </Text>
-            <Text
-              style={[styles.headerName, { color: colors.primary.contrast }]}
-            >
+            <Text style={[styles.teacherName, { color: colors.primary.main }]}>
               {teacherProfile.name}
-            </Text>
-            <Text
-              style={[
-                styles.headerSubtitle,
-                { color: colors.primary.contrast },
-              ]}
-            >
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
             </Text>
           </View>
           <TouchableOpacity
-            style={styles.notificationButton}
+            style={[
+              styles.notificationBtn,
+              { backgroundColor: colors.background.secondary },
+            ]}
             onPress={() => setShowNotifications(true)}
-            activeOpacity={0.7}
           >
             <IconSymbol
               name="bell.fill"
-              size={24}
-              color={colors.primary.contrast}
+              size={20}
+              color={colors.text.primary}
             />
             {unreadCount > 0 && (
               <View
                 style={[
-                  styles.notificationBadge,
+                  styles.badge,
                   { backgroundColor: colors.status.error.main },
                 ]}
               >
-                <Text style={styles.notificationBadgeText}>{unreadCount}</Text>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
               </View>
             )}
           </TouchableOpacity>
         </View>
-
-        {/* Live Class Banner */}
-        {nextClass.isLive && (
-          <Animated.View
-            style={[
-              styles.liveClassBanner,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <View style={styles.liveDotContainer}>
-              <View style={[styles.liveDot, styles.liveDotPulse]} />
-              <View style={styles.liveDot} />
-            </View>
-            <Text
-              style={[styles.liveClassText, { color: colors.primary.contrast }]}
-            >
-              LIVE NOW: {nextClass.subject} • {nextClass.room}
-            </Text>
-          </Animated.View>
-        )}
-      </LinearGradient>
+      </View>
 
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Quick Stats */}
         <Animated.View
-          style={[
-            styles.statsSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
+          style={{
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          }}
         >
-          <View style={styles.statsGrid}>
-            <StatsCard
-              type="students"
-              value={dashboardStats.totalStudents}
-              label="Total Students"
-              onPress={() => handleStatCard("students")}
-            />
-            <StatsCard
-              type="attendance"
-              value={dashboardStats.todayAttendancePercent}
-              label="Today's Attendance"
-              onPress={() => handleStatCard("attendance")}
-              isPercentage
-            />
-            <StatsCard
-              type="tasks"
-              value={dashboardStats.pendingTasks}
-              label="Pending Tasks"
-              onPress={() => handleStatCard("tasks")}
-            />
-            <StatsCard
-              type="deadlines"
-              value={dashboardStats.upcomingDeadlines}
-              label="Deadlines"
-              onPress={() => handleStatCard("deadlines")}
+          {/* Key Metrics Grid */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statsGrid}>
+              <StatsCard
+                type="students"
+                value={dashboardStats.totalStudents}
+                label="Students"
+                onPress={() => handleStatCard("students")}
+              />
+              <StatsCard
+                type="attendance"
+                value={dashboardStats.todayAttendancePercent}
+                label="Attendance"
+                onPress={() => handleStatCard("attendance")}
+                isPercentage
+              />
+              <StatsCard
+                type="tasks"
+                value={dashboardStats.pendingTasks}
+                label="Tasks"
+                onPress={() => handleStatCard("tasks")}
+              />
+              <StatsCard
+                type="deadlines"
+                value={dashboardStats.upcomingDeadlines}
+                label="Deadlines"
+                onPress={() => handleStatCard("deadlines")}
+              />
+            </View>
+          </View>
+
+          {/* Quick Actions Strip */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
+              Quick Actions
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.quickActionsScroll}
+            >
+              {quickActions.map((action) => (
+                <TouchableOpacity
+                  key={action.id}
+                  style={[
+                    styles.actionPill,
+                    { backgroundColor: colors.background.secondary },
+                  ]}
+                  onPress={action.action}
+                >
+                  <View
+                    style={[
+                      styles.actionIcon,
+                      { backgroundColor: action.color + "15" },
+                    ]}
+                  >
+                    <IconSymbol
+                      name={action.icon as any}
+                      size={20}
+                      color={action.color}
+                    />
+                  </View>
+                  <Text
+                    style={[styles.actionText, { color: colors.text.primary }]}
+                  >
+                    {action.title}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Current Status / Schedule */}
+          <View style={styles.section}>
+            <View style={styles.rowBetween}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.text.primary }]}
+              >
+                {nextClass.isLive ? "Happening Now" : "Up Next"}
+              </Text>
+              {nextClass.isLive && (
+                <View style={styles.liveTag}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>LIVE</Text>
+                </View>
+              )}
+            </View>
+            <ScheduleCard
+              subject={nextClass.subject}
+              grade={nextClass.grade}
+              time={nextClass.time}
+              room={nextClass.room}
+              studentsCount={nextClass.studentsCount}
+              onQuickAttendance={handleQuickAttendance}
             />
           </View>
-        </Animated.View>
 
-        {/* Teacher Check-In/Out Status */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            My Attendance
-          </Text>
-          <CheckInOutCard
-            isCheckedIn={isCheckedIn}
-            checkInTime={currentAttendance.checkInTime}
-            checkOutTime={currentAttendance.checkOutTime}
-            onCheckIn={handleCheckIn}
-            onCheckOut={handleCheckOut}
-            loading={checkInLoading}
-          />
-        </View>
+          {/* Check In/Out */}
+          <View style={styles.section}>
+            <CheckInOutCard
+              isCheckedIn={isCheckedIn}
+              checkInTime={currentAttendance.checkInTime}
+              checkOutTime={currentAttendance.checkOutTime}
+              onCheckIn={handleCheckIn}
+              onCheckOut={handleCheckOut}
+              loading={checkInLoading}
+            />
+          </View>
 
-        {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Quick Actions
-          </Text>
-          <View style={styles.quickActionsGrid}>
-            {quickActions.map((action) => (
-              <TouchableOpacity
-                key={action.id}
-                style={[
-                  styles.quickActionCard,
-                  {
-                    backgroundColor: colors.ui.card,
-                    borderColor: colors.ui.border,
-                  },
-                ]}
-                onPress={action.action}
-                activeOpacity={0.7}
+          {/* Attendance Chart Preview */}
+          <View style={styles.section}>
+            <View style={styles.rowBetween}>
+              <Text
+                style={[styles.sectionTitle, { color: colors.text.primary }]}
               >
-                <View
-                  style={[
-                    styles.quickActionIcon,
-                    { backgroundColor: action.color + "20" },
-                  ]}
-                >
-                  <IconSymbol
-                    name={action.icon as any}
-                    size={24}
-                    color={action.color}
-                  />
-                </View>
+                Overview
+              </Text>
+              <TouchableOpacity onPress={() => setShowReportModal(true)}>
                 <Text
-                  style={[
-                    styles.quickActionText,
-                    { color: colors.text.primary },
-                  ]}
+                  style={{
+                    color: colors.primary.main,
+                    fontSize: FontSizes.sm,
+                    fontWeight: "600",
+                  }}
                 >
-                  {action.title}
+                  See Report
                 </Text>
               </TouchableOpacity>
-            ))}
+            </View>
+            <AttendanceSummaryCard
+              present={todayAttendance.present}
+              absent={todayAttendance.absent}
+              total={todayAttendance.total}
+              onViewDetails={() => setShowReportModal(true)}
+            />
           </View>
-        </View>
 
-        {/* Next Class Schedule */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+          {/* Timeline Feed */}
+          <View style={[styles.section, styles.lastSection]}>
             <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-              {nextClass.isLive ? "Current Class" : "Next Class"}
+              Activity Feed
             </Text>
-            {nextClass.isLive && (
-              <View style={styles.liveBadge}>
-                <View style={styles.liveBadgeDot} />
-                <Text style={styles.liveBadgeText}>LIVE</Text>
-              </View>
-            )}
-          </View>
-          <ScheduleCard
-            subject={nextClass.subject}
-            grade={nextClass.grade}
-            time={nextClass.time}
-            room={nextClass.room}
-            studentsCount={nextClass.studentsCount}
-            onQuickAttendance={handleQuickAttendance}
-          />
-        </View>
-
-        {/* Today's Attendance Summary */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Today's Attendance
-          </Text>
-          <AttendanceSummaryCard
-            present={todayAttendance.present}
-            absent={todayAttendance.absent}
-            total={todayAttendance.total}
-            onViewDetails={() => setShowReportModal(true)}
-          />
-        </View>
-
-        {/* Recent Activity */}
-        <View style={[styles.section, styles.lastSection]}>
-          <Text style={[styles.sectionTitle, { color: colors.text.primary }]}>
-            Recent Activity
-          </Text>
-          <View style={styles.activityList}>
-            {recentActivities.map((activity) => (
-              <View
-                key={activity.id}
-                style={[
-                  styles.activityItem,
-                  {
-                    backgroundColor: colors.ui.card,
-                    borderColor: colors.ui.border,
-                  },
-                ]}
-              >
-                <View
-                  style={[
-                    styles.activityIcon,
-                    { backgroundColor: activity.iconColor + "20" },
-                  ]}
-                >
-                  <IconSymbol
-                    name={activity.icon as any}
-                    size={20}
-                    color={activity.iconColor}
-                  />
+            <View style={styles.timeline}>
+              {recentActivities.map((activity, index) => (
+                <View key={activity.id} style={styles.timelineItem}>
+                  {/* Timeline Line */}
+                  {index !== recentActivities.length - 1 && (
+                    <View
+                      style={[
+                        styles.timelineLine,
+                        { backgroundColor: colors.ui.border },
+                      ]}
+                    />
+                  )}
+                  <View
+                    style={[
+                      styles.timelineIcon,
+                      {
+                        backgroundColor: activity.iconColor + "15",
+                        borderColor: activity.iconColor,
+                      },
+                    ]}
+                  >
+                    <IconSymbol
+                      name={activity.icon as any}
+                      size={16}
+                      color={activity.iconColor}
+                    />
+                  </View>
+                  <View
+                    style={[
+                      styles.timelineContent,
+                      {
+                        borderBottomWidth:
+                          index === recentActivities.length - 1 ? 0 : 1,
+                        borderColor: colors.ui.border,
+                      },
+                    ]}
+                  >
+                    <View style={styles.rowBetween}>
+                      <Text
+                        style={[
+                          styles.timelineTitle,
+                          { color: colors.text.primary },
+                        ]}
+                      >
+                        {activity.title}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.timelineTime,
+                          { color: colors.text.tertiary },
+                        ]}
+                      >
+                        {activity.time}
+                      </Text>
+                    </View>
+                    <Text
+                      style={[
+                        styles.timelineDesc,
+                        { color: colors.text.secondary },
+                      ]}
+                    >
+                      {activity.description}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.activityContent}>
-                  <Text
-                    style={[
-                      styles.activityTitle,
-                      { color: colors.text.primary },
-                    ]}
-                  >
-                    {activity.title}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.activityDescription,
-                      { color: colors.text.secondary },
-                    ]}
-                  >
-                    {activity.description}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.activityTime,
-                      { color: colors.text.tertiary },
-                    ]}
-                  >
-                    {activity.time}
-                  </Text>
-                </View>
-              </View>
-            ))}
+              ))}
+            </View>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
 
       {/* Modals */}
@@ -593,234 +536,174 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-
-  // Gradient Header
-  gradientHeader: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xl,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+  scrollContent: {
+    paddingBottom: Spacing.xl * 2,
   },
-  headerContent: {
+  header: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Platform.OS === "android" ? Spacing.xl : Spacing.md,
+    paddingBottom: Spacing.md,
+    zIndex: 10,
+  },
+  headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
   },
-  headerLeft: {
-    flex: 1,
-  },
-  headerGreeting: {
-    fontSize: FontSizes.base,
-    opacity: 0.9,
+  greeting: {
+    fontSize: FontSizes.sm,
+    fontWeight: "500",
     marginBottom: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
-  headerName: {
+  teacherName: {
     fontSize: FontSizes["2xl"],
-    fontWeight: "bold",
-    marginBottom: 4,
+    fontWeight: "800",
+    letterSpacing: -0.5,
   },
-  headerSubtitle: {
-    fontSize: FontSizes.sm,
-    opacity: 0.8,
-  },
-  notificationButton: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    alignItems: "center",
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     justifyContent: "center",
-    position: "relative",
-  },
-  notificationBadge: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    borderRadius: BorderRadius.full,
-    minWidth: 18,
-    height: 18,
     alignItems: "center",
+    position: "relative",
+    borderWidth: 1,
+    borderColor: "rgba(150,150,150,0.1)",
+  },
+  badge: {
+    position: "absolute",
+    top: -2,
+    right: -2,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     justifyContent: "center",
-    paddingHorizontal: 4,
-  },
-  notificationBadgeText: {
-    fontSize: 10,
-    fontWeight: "bold",
-    color: "#FFFFFF",
-  },
-
-  // Live Class Banner
-  liveClassBanner: {
-    flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.md,
-    gap: Spacing.sm,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
-  liveDotContainer: {
-    position: "relative",
-    width: 12,
-    height: 12,
+  badgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "bold",
   },
-  liveDot: {
-    position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "#FF4444",
-    top: 2,
-    left: 2,
-  },
-  liveDotPulse: {
-    width: 12,
-    height: 12,
-    backgroundColor: "#FF4444",
-    opacity: 0.4,
-    top: 0,
-    left: 0,
-  },
-  liveClassText: {
-    fontSize: FontSizes.sm,
-    fontWeight: "700",
-  },
-
-  // Scroll View
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: Spacing.xl,
-  },
-
-  // Stats Section
-  statsSection: {
-    marginTop: -Spacing.xl * 2,
+  statsContainer: {
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
+    marginTop: Spacing.sm,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: Spacing.md,
   },
-
-  // Section
   section: {
     paddingHorizontal: Spacing.lg,
-    marginTop: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   lastSection: {
-    marginBottom: Spacing.lg,
-  },
-  sectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: FontSizes.xl,
+    fontSize: FontSizes.lg,
     fontWeight: "700",
     marginBottom: Spacing.md,
+    letterSpacing: -0.3,
   },
-
-  // Live Badge
-  liveBadge: {
+  quickActionsScroll: {
+    gap: Spacing.md,
+    paddingRight: Spacing.lg,
+  },
+  actionPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "rgba(150,150,150,0.1)",
+  },
+  actionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionText: {
+    fontSize: FontSizes.sm,
+    fontWeight: "600",
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  liveTag: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FF4444",
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    borderRadius: 12,
     gap: 4,
   },
-  liveBadgeDot: {
+  liveDot: {
     width: 6,
     height: 6,
-    borderRadius: BorderRadius.full,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "white",
+    borderRadius: 3,
   },
-  liveBadgeText: {
-    fontSize: FontSizes.xs,
-    fontWeight: "700",
-    color: "#FFFFFF",
+  liveText: {
+    color: "white",
+    fontSize: 10,
+    fontWeight: "bold",
   },
-
-  // Quick Actions
-  quickActionsGrid: {
+  timeline: {
+    paddingLeft: 10,
+  },
+  timelineItem: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: Spacing.md,
+    marginBottom: 0,
+    position: "relative",
   },
-  quickActionCard: {
-    width: (width - Spacing.lg * 2 - Spacing.md) / 2,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    alignItems: "center",
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+  timelineLine: {
+    position: "absolute",
+    left: 15,
+    top: 30,
+    bottom: -10, // Extend to next item
+    width: 1,
+    zIndex: 0,
   },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.full,
-    alignItems: "center",
+  timelineIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: "center",
-    marginBottom: Spacing.sm,
-  },
-  quickActionText: {
-    fontSize: FontSizes.sm,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-
-  // Recent Activity
-  activityList: {
-    gap: Spacing.sm,
-  },
-  activityItem: {
-    flexDirection: "row",
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    gap: Spacing.md,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
     alignItems: "center",
-    justifyContent: "center",
+    marginRight: 16,
+    zIndex: 1,
+    borderWidth: 2,
+    backgroundColor: "white", // Ensure it covers the line
   },
-  activityContent: {
+  timelineContent: {
     flex: 1,
+    paddingBottom: Spacing.lg,
+    justifyContent: "center",
   },
-  activityTitle: {
+  timelineTitle: {
     fontSize: FontSizes.base,
     fontWeight: "600",
     marginBottom: 2,
   },
-  activityDescription: {
-    fontSize: FontSizes.sm,
-    marginBottom: 4,
-  },
-  activityTime: {
+  timelineTime: {
     fontSize: FontSizes.xs,
+  },
+  timelineDesc: {
+    fontSize: FontSizes.sm,
   },
 });

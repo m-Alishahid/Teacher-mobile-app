@@ -44,8 +44,8 @@ export interface ClassScheduleItem {
 
 // Teacher Profile
 export const teacherProfile = {
-  name: 'Dr. Sarah Johnson',
-  email: 'sarah.johnson@school.edu',
+  name: 'Dr. Asif Ali',
+  email: 'asif.ali@school.edu',
   department: 'Science',
   employeeId: 'TCH-2024-001',
   phone: '+92 300 1234567',

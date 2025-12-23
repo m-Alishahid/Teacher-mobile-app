@@ -1,15 +1,16 @@
 import { CustomAlert } from "@/components/ui/CustomAlert";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { SidebarDrawer } from "@/components/ui/SidebarDrawer";
+import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, useRouter } from "expo-router";
+import { Tabs } from "expo-router";
 import React, { useState } from "react";
 import { Platform, TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
-  const router = useRouter();
+  const { logout } = useAuth();
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [alertConfig, setAlertConfig] = useState({
     visible: false,
@@ -41,7 +42,7 @@ export default function TabLayout() {
     setAlertConfig((prev) => ({ ...prev, visible: false }));
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     showAlert(
       "Logout",
       "Are you sure you want to end your session?",
@@ -52,9 +53,11 @@ export default function TabLayout() {
         {
           text: "Logout",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
             closeAlert();
-            router.replace("/");
+            // Use global logout function
+            await logout();
+            // Redirection will be handled by the root _layout.tsx
           },
         },
       ]
