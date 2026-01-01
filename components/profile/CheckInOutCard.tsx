@@ -572,7 +572,7 @@ const SwipeButton: React.FC<SwipeButtonProps> = ({
         const maxScroll = buttonWidth.current - 60;
 
         // Swipe threshold: 65% of the width
-        if (gestureState.dx > maxScroll * 0.65) {
+        if (gestureState.dx > maxScroll * 0.45) {
           setSwiped(true);
           Animated.spring(translateX, {
             toValue: maxScroll,

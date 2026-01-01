@@ -8,7 +8,7 @@
 export { allClasses, getGrades, getSubjects } from './classes';
 
 // Students Data
-export { generateStudents, studentNames } from './students';
+export { generateStudents, studentNames, students } from './students';
 
 // Dashboard Data
 export {

@@ -54,3 +54,17 @@ export const generateStudents = (count: number): Student[] => {
     status: null,
   }));
 };
+
+export const students = Array.from({ length: 20 }, (_, i) => {
+  const statuses = ['Present', 'Absent', 'Late', 'Leave'];
+  const status = statuses[Math.floor(Math.random() * statuses.length)];
+  
+  return {
+    id: String(i + 1),
+    name: studentNames[i % studentNames.length],
+    rollNumber: String(1001 + i),
+    class: ['10-A', '10-B', '9-A'][Math.floor(Math.random() * 3)],
+    attendance: status,
+    avatar: null
+  };
+});

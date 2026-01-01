@@ -257,15 +257,13 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
 
   const handleStudents = useCallback(() => {
     onClose();
-    // Navigate to students when screen is created
-    console.log("Students screen - Coming soon!");
-  }, [onClose]);
+    router.push("/(tabs)/students");
+  }, [onClose, router]);
 
   const handleSchedule = useCallback(() => {
     onClose();
-    // Navigate to schedule when screen is created
-    console.log("Schedule screen - Coming soon!");
-  }, [onClose]);
+    router.push("/(tabs)/schedule");
+  }, [onClose, router]);
 
   const handleAttendance = useCallback(() => {
     onClose();

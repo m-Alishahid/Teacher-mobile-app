@@ -6,7 +6,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import React, { useState } from "react";
-import { Platform, TouchableOpacity } from "react-native";
+import { TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
@@ -84,28 +84,45 @@ export default function TabLayout() {
           headerShown: true,
           headerStyle: {
             backgroundColor: colors.primary.main,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
           },
           headerTintColor: colors.primary.contrast,
           headerTitleStyle: {
-            fontWeight: "600",
+            fontWeight: "700",
+            fontSize: 18,
           },
           headerLeft: () => <MenuButton />,
           tabBarStyle: {
-            backgroundColor: colors.background.secondary, // Use secondary for tab bar
-            borderTopColor: colors.ui.border,
-            borderTopWidth: 1,
-            height: Platform.OS === "ios" ? 82 : 60,
-            paddingBottom: Platform.OS === "ios" ? 22 : 10,
-            paddingTop: 8,
-            elevation: 8,
-            shadowColor: isDark ? "#000000" : "#000000",
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: isDark ? 0.3 : 0.1,
-            shadowRadius: 8,
+            position: "absolute",
+            bottom: 25,
+            left: 20,
+            right: 20,
+            elevation: 10,
+            backgroundColor: colors.background.secondary,
+            borderRadius: 25,
+            height: 70,
+            borderTopWidth: 0,
+            paddingBottom: 0,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 4,
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 5,
+            // Ensure it sits above other content
+            zIndex: 1000,
+          },
+          tabBarItemStyle: {
+            paddingVertical: 12,
+            height: 70,
           },
           tabBarLabelStyle: {
-            fontSize: 12,
+            fontSize: 10,
             fontWeight: "600",
+            paddingBottom: 4,
           },
           // Add smooth animations for tab switching
           animation: "shift",
@@ -136,6 +153,18 @@ export default function TabLayout() {
           }}
         />
 
+        {/* Schedule Tab */}
+        <Tabs.Screen
+          name="schedule"
+          options={{
+            title: "Schedule",
+            headerTitle: "My Schedule",
+            tabBarIcon: ({ color, focused }) => (
+              <IconSymbol size={28} name="calendar" color={color} />
+            ),
+          }}
+        />
+
         {/* Attendance Tab */}
         <Tabs.Screen
           name="attendance"
@@ -161,6 +190,14 @@ export default function TabLayout() {
             tabBarIcon: ({ color, focused }) => (
               <IconSymbol size={28} name="person.fill" color={color} />
             ),
+          }}
+        />
+
+        {/* Hide Students Tab */}
+        <Tabs.Screen
+          name="students"
+          options={{
+            href: null,
           }}
         />
       </Tabs>
