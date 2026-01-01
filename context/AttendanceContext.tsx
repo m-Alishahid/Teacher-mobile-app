@@ -4,7 +4,6 @@ import {
   currentAttendance as initialCurrentAttendance,
 } from "@/data";
 import React, { createContext, ReactNode, useContext, useState } from "react";
-import { Alert } from "react-native";
 
 interface AttendanceContextType {
   currentAttendance: AttendanceRecord;
@@ -50,28 +49,11 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
 
       setCurrentAttendance(newRecord);
       setIsLoading(false);
-
-      Alert.alert(
-        "✅ Checked In Automatically",
-        `Welcome! You checked in at ${checkInTime}`,
-        [{ text: "OK" }]
-      );
     }, 1000);
   };
 
   const checkOut = () => {
-    Alert.alert(
-      "Confirm Check Out",
-      "Are you sure you want to check out for the day?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Check Out",
-          style: "destructive",
-          onPress: () => performCheckOut(),
-        },
-      ]
-    );
+    performCheckOut();
   };
 
   const performCheckOut = () => {
@@ -99,14 +81,6 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
       // Update current state
       setCurrentAttendance(completedRecord);
       setIsLoading(false);
-
-      setTimeout(() => {
-        Alert.alert(
-          "✅ Checked Out Successfully",
-          `Check-in: ${completedRecord.checkInTime}\nCheck-out: ${checkOutTime}\n\nYou worked for ${workingHours} today. Have a great evening!`,
-          [{ text: "OK" }]
-        );
-      }, 500);
     }, 1000);
   };
 

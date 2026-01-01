@@ -94,8 +94,8 @@ export default function TabLayout() {
             backgroundColor: colors.background.secondary, // Use secondary for tab bar
             borderTopColor: colors.ui.border,
             borderTopWidth: 1,
-            height: Platform.OS === "ios" ? 88 : 60,
-            paddingBottom: Platform.OS === "ios" ? 24 : 8,
+            height: Platform.OS === "ios" ? 82 : 60,
+            paddingBottom: Platform.OS === "ios" ? 22 : 10,
             paddingTop: 8,
             elevation: 8,
             shadowColor: isDark ? "#000000" : "#000000",
