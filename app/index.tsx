@@ -15,10 +15,6 @@ import {
   View,
 } from "react-native";
 
-// Hardcoded credentials
-const VALID_EMAIL = "teacher@gmail.com";
-const VALID_PASSWORD = "123456";
-
 export default function LoginScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
@@ -34,27 +30,30 @@ export default function LoginScreen() {
 
     setIsLoading(true);
 
-    // Simulate API call with credential validation
-    setTimeout(async () => {
-      // Check if credentials match
-      if (email.toLowerCase() === VALID_EMAIL && password === VALID_PASSWORD) {
-        try {
-          // Use global login function which updates state
-          await login(email);
-          setIsLoading(false);
-          // Redirection will be handled by _layout.tsx based on isLoggedIn state
-        } catch (error) {
-          setIsLoading(false);
-          Alert.alert("Error", "Failed to save login state");
-        }
+    try {
+      // Call the backend API through AuthContext
+      const result = await login(email, password);
+
+      setIsLoading(false);
+
+      if (result.success) {
+        // Success - navigation will be handled automatically by _layout.tsx
+        console.log("✅ Login successful, waiting for navigation...");
+        // Redirection will be handled by _layout.tsx based on isLoggedIn state
       } else {
-        setIsLoading(false);
+        // Failed - show error message
         Alert.alert(
-          "Invalid Credentials",
-          "Email or password is incorrect.\n\nUse:\nEmail: teacher@gmail.com\nPassword: 123456"
+          "Login Failed",
+          result.message || "Please check your credentials and try again."
         );
       }
-    }, 1000);
+    } catch (error: any) {
+      setIsLoading(false);
+      Alert.alert(
+        "Error",
+        error.message || "An unexpected error occurred. Please try again."
+      );
+    }
   };
 
   return (

@@ -20,7 +20,6 @@ import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
 import { useAttendance } from "@/context/AttendanceContext";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { teacherProfile } from "@/data";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -129,8 +128,13 @@ const SettingItem: React.FC<SettingItemProps> = ({
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user, refreshUser } = useAuth();
   const { colors, isDark, toggleTheme } = useTheme();
+
+  // Load latest 'Me' data on mount
+  React.useEffect(() => {
+    refreshUser();
+  }, []);
 
   // Use Global Attendance Context
   const {
@@ -268,9 +272,9 @@ export default function ProfileScreen() {
               ]}
             >
               <Text style={[styles.avatarText, { color: colors.primary.main }]}>
-                {teacherProfile.name
+                {(user?.fullName || user?.name || "User")
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")
                   .toUpperCase()
                   .slice(0, 2)}
@@ -285,15 +289,16 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
             <Text style={[styles.name, { color: colors.primary.contrast }]}>
-              {teacherProfile.name}
+              {user?.fullName || user?.name || "Teacher Name"}
             </Text>
             <Text style={[styles.role, { color: "rgba(255,255,255,0.9)" }]}>
-              {teacherProfile.designation} • {teacherProfile.department}
+              {user?.designation || "Senior Teacher"} •{" "}
+              {user?.department || "Department"}
             </Text>
             <Text
               style={[styles.employeeId, { color: "rgba(255,255,255,0.8)" }]}
             >
-              ID: {teacherProfile.employeeId}
+              ID: {user?.employeeId || "Emp ID"}
             </Text>
           </View>
         </LinearGradient>
@@ -414,21 +419,21 @@ export default function ProfileScreen() {
             <SettingItem
               icon="mail-outline"
               title="Email"
-              subtitle={teacherProfile.email}
+              subtitle={user?.email || "Email Address"}
               type="info"
               color={colors.status.info.main}
             />
             <SettingItem
               icon="call-outline"
               title="Phone"
-              subtitle={teacherProfile.phone}
+              subtitle={user?.phone || "Phone Number"}
               type="info"
               color={colors.status.success.main}
             />
             <SettingItem
               icon="briefcase-outline"
               title="Department"
-              subtitle={teacherProfile.department}
+              subtitle={user?.department || "Department"}
               type="info"
               color={colors.primary.main}
             />

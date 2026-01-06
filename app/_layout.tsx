@@ -50,23 +50,20 @@ function RootLayoutNav() {
     if (isLoading) return;
 
     const inTabsGroup = segments[0] === "(tabs)";
-    const inAuthGroup =
-      (segments as string[]).length === 0 ||
-      (segments[0] as string) === "index";
 
     console.log("📍 Navigation Check:", {
       isLoggedIn,
       segments,
+      segmentLength: segments.length,
       inTabsGroup,
-      inAuthGroup,
     });
 
-    if (!isLoggedIn && !inAuthGroup) {
-      // If not logged in and not in auth screens, redirect to login
+    if (!isLoggedIn && inTabsGroup) {
+      // If not logged in and trying to access tabs, redirect to login
       console.log("🔒 Access denied: Redirecting to Login");
       router.replace("/");
-    } else if (isLoggedIn && inAuthGroup) {
-      // If logged in and on an auth screen, redirect to dashboard
+    } else if (isLoggedIn && !inTabsGroup) {
+      // If logged in and not in tabs, redirect to dashboard
       console.log("✅ Authenticated: Redirecting to Dashboard");
       router.replace("/(tabs)");
     }

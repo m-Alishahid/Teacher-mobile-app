@@ -16,8 +16,8 @@
  */
 
 import { BorderRadius, FontSizes, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
-import { teacherProfile } from "@/data";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
@@ -185,6 +185,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onLogout,
 }) => {
   const { colors, isDark } = useTheme();
+  const { user } = useAuth();
   const router = useRouter();
 
   // Animation refs - use useRef to persist across renders
@@ -194,13 +195,13 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   // Memoized teacher initials calculation
   const teacherInitials = useMemo(
     () =>
-      teacherProfile.name
+      (user?.fullName || user?.name || "User")
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2),
-    []
+    [user]
   );
 
   // Memoized gradient colors
@@ -372,12 +373,14 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 </TouchableOpacity>
               </View>
 
-              <Text style={styles.profileName}>{teacherProfile.name}</Text>
+              <Text style={styles.profileName}>
+                {user?.fullName || user?.name || "Teacher"}
+              </Text>
               <Text style={styles.profileRole}>
-                {teacherProfile.designation}
+                {user?.designation || user?.role || "Senior Teacher"}
               </Text>
               <Text style={styles.profileId}>
-                ID: {teacherProfile.employeeId}
+                ID: {user?.employeeId || user?.id || "Emp ID"}
               </Text>
             </View>
           </LinearGradient>
