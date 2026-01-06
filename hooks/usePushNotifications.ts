@@ -1,5 +1,6 @@
 import { API_ENDPOINTS, BASE_URL } from '@/config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -90,6 +91,14 @@ export const useNotifications = () => {
     // 4. Initial Load & Listeners
     useEffect(() => {
         fetchNotifications();
+
+        // Skip notification listeners in Expo Go (SDK 53+ doesn't support push notifications)
+        const isExpoGo = Constants.appOwnership === 'expo';
+
+        if (isExpoGo) {
+            console.log('⚠️ Running in Expo Go - Push notifications are disabled. Use a development build for full notification support.');
+            return; // Skip listener setup
+        }
 
         // Jab app open ho aur notification aaye, list refresh karo
         const subscription = Notifications.addNotificationReceivedListener(() => {
