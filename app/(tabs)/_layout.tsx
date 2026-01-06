@@ -4,11 +4,12 @@ import { SidebarDrawer } from "@/components/ui/SidebarDrawer";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
+  const router = useRouter();
   const { colors, isDark } = useTheme();
   const { logout } = useAuth();
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -57,7 +58,8 @@ export default function TabLayout() {
             closeAlert();
             // Use global logout function
             await logout();
-            // Redirection will be handled by the root _layout.tsx
+            // Redirection
+            router.replace("/");
           },
         },
       ]

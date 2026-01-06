@@ -16,13 +16,13 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { CheckInOutCard } from "@/components/profile/CheckInOutCard";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { FontSizes, Spacing } from "@/constants/theme";
+import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import {
   classSchedule,
   dashboardStats,
   initialNotifications,
   recentActivities as initialRecentActivities,
-  teacherProfile,
   todayAttendance,
   type Notification,
   type QuickAction,
@@ -49,6 +49,7 @@ const { width } = Dimensions.get("window");
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const { user } = useAuth();
   const { colors, isDark } = useTheme();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -219,7 +220,7 @@ export default function DashboardScreen() {
               {getGreeting()}
             </Text>
             <Text style={[styles.teacherName, { color: colors.primary.main }]}>
-              {teacherProfile.name}
+              {user?.fullName || user?.name || "Teacher"}
             </Text>
           </View>
           <TouchableOpacity
