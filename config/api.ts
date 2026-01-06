@@ -11,6 +11,8 @@ export const API_ENDPOINTS = {
     ME: '/api/auth/me',
   },
   NOTIFICATIONS: {
+    GET_NOTIFICATIONS: '/api/notifications/web-notifications', 
+    MARK_READ: '/api/notifications/mark-read',
     SAVE_TOKEN: '/api/auth/save-token',
   }
 };

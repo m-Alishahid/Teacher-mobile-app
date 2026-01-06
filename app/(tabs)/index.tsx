@@ -21,13 +21,12 @@ import { useTheme } from "@/context/ThemeContext";
 import {
   classSchedule,
   dashboardStats,
-  initialNotifications,
   recentActivities as initialRecentActivities,
   todayAttendance,
-  type Notification,
   type QuickAction,
   type RecentActivity,
 } from "@/data";
+import { useNotifications } from "@/hooks/usePushNotifications";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -51,10 +50,24 @@ export default function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const { colors, isDark } = useTheme();
-  const [showNotifications, setShowNotifications] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(30));
+
+  // Notification state from backend hook
+  const [notificationModalVisible, setNotificationModalVisible] =
+    useState(false);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    fetchNotifications,
+  } = useNotifications();
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
@@ -71,9 +84,6 @@ export default function DashboardScreen() {
       }),
     ]).start();
   }, []);
-
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
 
   // Check-in/out state from Global Context
   const {
@@ -170,14 +180,6 @@ export default function DashboardScreen() {
     })
   );
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markNotificationAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
   const handleQuickAttendance = () => {
     Alert.alert("Quick Attendance", `Mark attendance for ${nextClass.grade}?`, [
       { text: "Cancel", style: "cancel" },
@@ -228,7 +230,10 @@ export default function DashboardScreen() {
               styles.notificationBtn,
               { backgroundColor: colors.background.secondary },
             ]}
-            onPress={() => setShowNotifications(true)}
+            onPress={() => {
+              fetchNotifications(); // Fetch fresh data
+              setNotificationModalVisible(true);
+            }}
           >
             <IconSymbol
               name="bell.fill"
@@ -475,13 +480,11 @@ export default function DashboardScreen() {
 
       {/* Modals */}
       <NotificationModal
-        visible={showNotifications}
-        onClose={() => setShowNotifications(false)}
+        visible={notificationModalVisible}
+        onClose={() => setNotificationModalVisible(false)}
         notifications={notifications}
-        onMarkAsRead={markNotificationAsRead}
-        onMarkAllAsRead={() =>
-          setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-        }
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
       />
       <DetailedReportModal
         visible={showReportModal}
