@@ -20,8 +20,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.sajood.Teacher_Mobile_App"
-      // "package": "com.sajood.teachermobileapp"
+      "package": "com.sajood.Teacher_Mobile_App",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
