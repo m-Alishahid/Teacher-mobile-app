@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "899436131428",
+    "project_id": "schoolapp-f5010",
+    "storage_bucket": "schoolapp-f5010.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:899436131428:android:c2e9ee7bb312d978ac1b71",
+        "android_client_info": {
+          "package_name": "com.sajood.Teacher_Mobile_App"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAiALQyE9GrfwkV4TaHwCTbucbKdeG8M-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
