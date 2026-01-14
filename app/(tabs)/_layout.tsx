@@ -6,7 +6,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, useRouter } from "expo-router";
 import React, { useState } from "react";
-import { TouchableOpacity } from "react-native";
+import { Dimensions, TouchableOpacity } from "react-native";
 
 export default function TabLayout() {
   const router = useRouter();
@@ -21,6 +21,10 @@ export default function TabLayout() {
     iconColor: "",
     buttons: [] as any[],
   });
+
+  // Make tab bar responsive based on screen height
+  const screenHeight = Dimensions.get('window').height;
+  const bottomPosition = 0; // At the very bottom edge
 
   const showAlert = (
     title: string,
@@ -98,12 +102,12 @@ export default function TabLayout() {
           headerLeft: () => <MenuButton />,
           tabBarStyle: {
             position: "absolute",
-            bottom: 25,
+            bottom: bottomPosition,
             left: 20,
             right: 20,
             elevation: 10,
             backgroundColor: colors.background.secondary,
-            borderRadius: 25,
+            borderRadius: 0,
             height: 70,
             borderTopWidth: 0,
             paddingBottom: 0,
