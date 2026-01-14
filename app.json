@@ -4,7 +4,7 @@
     "slug": "Teacher_Mobile_App",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/teacher.png",
     "scheme": "teachermobileapp",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -32,7 +32,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/teacher.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

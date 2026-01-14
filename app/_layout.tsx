@@ -51,20 +51,11 @@ function RootLayoutNav() {
 
     const inTabsGroup = segments[0] === "(tabs)";
 
-    console.log("📍 Navigation Check:", {
-      isLoggedIn,
-      segments,
-      segmentLength: segments.length,
-      inTabsGroup,
-    });
-
     if (!isLoggedIn && inTabsGroup) {
       // If not logged in and trying to access tabs, redirect to login
-      console.log("🔒 Access denied: Redirecting to Login");
       router.replace("/");
     } else if (isLoggedIn && !inTabsGroup) {
       // If logged in and not in tabs, redirect to dashboard
-      console.log("✅ Authenticated: Redirecting to Dashboard");
       router.replace("/(tabs)");
     }
   }, [isLoggedIn, segments, isLoading]);
